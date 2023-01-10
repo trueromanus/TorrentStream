@@ -35,7 +35,7 @@ namespace TorrentStream {
             }
         }
         private static string GetStringValueFromQuery ( string key, HttpContext httpContext ) {
-            return httpContext.Request.Query.ContainsKey ( key ) ? httpContext.Request.Query.Where ( a => a.Key == key ).First ().Value.First () : "";
+            return httpContext.Request.Query.ContainsKey ( key ) ? httpContext.Request.Query.Where ( a => a.Key == key ).FirstOrDefault ().Value.First () ?? "" : "";
         }
 
         public static async Task StartDownloadForOnlineStreaming ( HttpContext context ) {
@@ -93,7 +93,9 @@ namespace TorrentStream {
             }
         }
 
-        public static void Finalization () {
+        public static void Finalization ( HttpContext context ) {
+            if ( context is null ) throw new ArgumentNullException ( nameof ( context ) );
+
             if ( Directory.Exists ( DownloadsPath ) ) Directory.Delete ( DownloadsPath, true );
         }
 
