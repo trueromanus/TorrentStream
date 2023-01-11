@@ -1,3 +1,4 @@
+using System.Text;
 using TorrentStream;
 
 var builder = WebApplication.CreateBuilder ( args );
@@ -10,9 +11,12 @@ builder.WebHost.ConfigureKestrel (
 );
 var app = builder.Build ();
 
+app.UseExceptionHandler ("/error");
+
 app.UseRouting ();
 
 app.MapGet ( "/online", TorrentHandler.StartDownloadForOnlineStreaming );
 app.MapGet ( "/clearall", TorrentHandler.Finalization );
+app.MapGet ( "/error", async ( context ) => { await context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( "Something went wrong :(" ) ); } );
 
 app.Run ();

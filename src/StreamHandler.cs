@@ -93,8 +93,12 @@ namespace TorrentStream {
             }
         }
 
-        public static void Finalization ( HttpContext context ) {
+        public static async Task Finalization ( HttpContext context ) {
             if ( context is null ) throw new ArgumentNullException ( nameof ( context ) );
+
+            await ClientEngine.StopAllAsync ();
+            m_TorrentManagers.Clear ();
+            m_TorrentStreams.Clear ();
 
             if ( Directory.Exists ( DownloadsPath ) ) Directory.Delete ( DownloadsPath, true );
         }
