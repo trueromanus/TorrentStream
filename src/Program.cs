@@ -1,5 +1,12 @@
+using System.Runtime.InteropServices;
 using System.Text;
 using TorrentStream;
+
+#if !DEBUG
+if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ) {
+    WindowsExtras.AdjustConsoleWindow ( args.Any ( a => a.ToLowerInvariant () == "showconsole" ) );
+}
+#endif
 
 var builder = WebApplication.CreateBuilder ( args );
 builder.WebHost.ConfigureKestrel (
@@ -11,7 +18,7 @@ builder.WebHost.ConfigureKestrel (
 );
 var app = builder.Build ();
 
-app.UseExceptionHandler ("/error");
+app.UseExceptionHandler ( "/error" );
 
 app.UseRouting ();
 
