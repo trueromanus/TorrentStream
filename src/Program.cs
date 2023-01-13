@@ -1,4 +1,6 @@
+#if !DEBUG
 using System.Runtime.InteropServices;
+#endif
 using System.Text;
 using TorrentStream;
 

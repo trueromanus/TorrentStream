@@ -3,6 +3,7 @@ using MonoTorrent;
 using System.Reflection;
 using System.Collections.Concurrent;
 using MonoTorrent.Streaming;
+using System.Runtime.InteropServices;
 
 namespace TorrentStream {
 
@@ -21,7 +22,7 @@ namespace TorrentStream {
         public static readonly ConcurrentDictionary<string, IUriStream> m_TorrentStreams = new ();
 
         private static async Task<(Stream?, bool)> GetTorrentStream ( string url ) {
-            if ( m_DownloadedTorrents.Contains( url )) return (null, true);
+            if ( m_DownloadedTorrents.Contains ( url ) ) return (null, true);
 
             try {
                 var httpClient = new HttpClient ();
@@ -62,7 +63,7 @@ namespace TorrentStream {
                 if ( m_TorrentManagers.TryGetValue ( torrentPath, out var createdManager ) ) {
                     manager = createdManager;
                 } else {
-                    if ( torrentStream == null) {
+                    if ( torrentStream == null ) {
                         context.Response.StatusCode = 404;
                         return;
                     }
@@ -80,14 +81,22 @@ namespace TorrentStream {
                 }
 
                 if ( m_TorrentStreams.ContainsKey ( torrentPath ) ) {
-                    if (m_TorrentStreams.TryRemove ( torrentPath, out var stream )) stream.Dispose ();
+                    if ( m_TorrentStreams.TryRemove ( torrentPath, out var stream ) ) stream.Dispose ();
                 }
 
-                var httpStream = await manager.StreamProvider.CreateHttpStreamAsync ( manager.Files[activeFileIndex], false );
-                m_TorrentStreams.TryAdd ( torrentPath, httpStream );
+                var currentFile = manager.Files[activeFileIndex];
+                var isDownloaded = currentFile.BitField.PercentComplete >= 1.0;
 
-                context.Response.StatusCode = 302;
-                context.Response.Headers.Location = httpStream.Uri.ToString ();
+                if ( !isDownloaded ) {
+                    var httpStream = await manager.StreamProvider.CreateHttpStreamAsync ( currentFile, false );
+                    m_TorrentStreams.TryAdd ( torrentPath, httpStream );
+
+                    context.Response.StatusCode = 302;
+                    context.Response.Headers.Location = httpStream.Uri.ToString ();
+                } else {
+                    context.Response.StatusCode = 302;
+                    context.Response.Headers.Location = ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ? "file:///" : "file://" ) + currentFile.FullPath;
+                }
             } catch {
                 context.Response.StatusCode = 500;
             }
