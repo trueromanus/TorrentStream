@@ -13,7 +13,7 @@ namespace TorrentStream {
 
         static TorrentHandler () => ClientEngine = new ClientEngine ();
 
-        private static readonly string DownloadsPath = Path.Combine ( Path.GetDirectoryName ( Assembly.GetExecutingAssembly ().Location ) ?? "", "Downloads" );
+        private static readonly string DownloadsPath = Path.Combine ( Path.GetDirectoryName ( AppContext.BaseDirectory ) ?? "", "Downloads" );
 
         public static readonly HashSet<string> m_DownloadedTorrents = new ();
 
