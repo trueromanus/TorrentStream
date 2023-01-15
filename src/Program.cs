@@ -29,7 +29,7 @@ app.UseExceptionHandler ( "/error" );
 app.UseRouting ();
 
 app.MapGet ( "/online", TorrentHandler.StartDownloadForOnlineStreaming );
-app.MapGet ( "/fulldownload", TorrentHandler.StartDownloadForOnlineStreaming );
+app.MapGet ( "/fulldownload", TorrentHandler.StartFullDownload );
 app.MapGet ( "/clearall", TorrentHandler.Finalization );
 app.MapGet ( "/error", async ( context ) => { await context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( "Something went wrong :(" ) ); } );
 
