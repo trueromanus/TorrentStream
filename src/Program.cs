@@ -4,6 +4,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using TorrentStream;
 
+var webPortValue = Environment.GetEnvironmentVariable ( "WEB_PORT" );
+var webPort = string.IsNullOrEmpty ( webPortValue ) ? 0 : Convert.ToInt32 ( webPortValue );
+if ( webPort < 0 ) webPort = 0;
+
 #if !DEBUG
 if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ) {
     WindowsExtras.AdjustConsoleWindow ( args.Any ( a => a.ToLowerInvariant () == "showconsole" ) );
@@ -13,7 +17,7 @@ if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ) {
 var builder = WebApplication.CreateBuilder ( args );
 builder.WebHost.ConfigureKestrel (
     options => {
-        options.ListenLocalhost ( 5082 );
+        options.ListenLocalhost ( webPort > 0 ? webPort : 5082 );
         options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes ( 10 );
         options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes ( 5 );
     }
@@ -25,6 +29,7 @@ app.UseExceptionHandler ( "/error" );
 app.UseRouting ();
 
 app.MapGet ( "/online", TorrentHandler.StartDownloadForOnlineStreaming );
+app.MapGet ( "/fulldownload", TorrentHandler.StartDownloadForOnlineStreaming );
 app.MapGet ( "/clearall", TorrentHandler.Finalization );
 app.MapGet ( "/error", async ( context ) => { await context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( "Something went wrong :(" ) ); } );
 

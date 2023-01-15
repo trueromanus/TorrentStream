@@ -1,6 +1,5 @@
 ﻿using MonoTorrent.Client;
 using MonoTorrent;
-using System.Reflection;
 using System.Collections.Concurrent;
 using MonoTorrent.Streaming;
 using System.Runtime.InteropServices;
@@ -102,6 +101,49 @@ namespace TorrentStream {
             }
         }
 
+        public static async Task StartFullDownload ( HttpContext context ) {
+            context.Response.ContentType = "text/plain";
+            if ( context.Request.Query.Count != 1 ) {
+                context.Response.StatusCode = 204;
+                return;
+            }
+
+            var torrentPath = GetStringValueFromQuery ( "path", context );
+
+            var (torrentStream, result) = await GetTorrentStream ( torrentPath );
+
+            if ( !result ) {
+                context.Response.StatusCode = 400;
+                return;
+            }
+
+            try {
+                TorrentManager manager;
+
+                if ( m_TorrentManagers.TryGetValue ( torrentPath, out var createdManager ) ) {
+                    manager = createdManager;
+                    foreach ( var file in manager.Files.Where ( a => a.Priority == Priority.DoNotDownload ) ) {
+                        await manager.SetFilePriorityAsync ( file, Priority.Normal );
+                    }
+                } else {
+                    if ( torrentStream == null ) {
+                        context.Response.StatusCode = 404;
+                        return;
+                    }
+                    torrentStream.Position = 0;
+                    var torrent = await Torrent.LoadAsync ( torrentStream );
+                    manager = await ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
+                    await manager.StartAsync ();
+                    await manager.WaitForMetadataAsync ();
+                    m_TorrentManagers.TryAdd ( torrentPath, manager );
+                }
+                context.Response.StatusCode = 200;
+                await context.Response.WriteAsync ( "Downloading started" );
+            } catch {
+                context.Response.StatusCode = 500;
+            }
+        }
+
         public static async Task Finalization ( HttpContext context ) {
             if ( context is null ) throw new ArgumentNullException ( nameof ( context ) );
 
@@ -110,6 +152,9 @@ namespace TorrentStream {
             m_TorrentStreams.Clear ();
 
             if ( Directory.Exists ( DownloadsPath ) ) Directory.Delete ( DownloadsPath, true );
+
+            context.Response.StatusCode = 200;
+            await context.Response.WriteAsync ( "Completed" );
         }
 
     }
