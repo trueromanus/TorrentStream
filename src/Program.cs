@@ -26,11 +26,22 @@ var app = builder.Build ();
 
 app.UseExceptionHandler ( "/error" );
 
+app.UseWebSockets (
+    new WebSocketOptions {
+        KeepAliveInterval = TimeSpan.FromSeconds( 30 )
+    }
+);
+
 app.UseRouting ();
 
 app.MapGet ( "/online", TorrentHandler.StartDownloadForOnlineStreaming );
 app.MapGet ( "/fulldownload", TorrentHandler.StartFullDownload );
 app.MapGet ( "/clearall", TorrentHandler.Finalization );
+app.MapGet ( "/ws", TorrentHandler.TorrentWebSocket );
 app.MapGet ( "/error", async ( context ) => { await context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( "Something went wrong :(" ) ); } );
 
+await TorrentHandler.LoadState ();
+
 app.Run ();
+
+await TorrentHandler.SaveState ();
