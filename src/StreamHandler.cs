@@ -28,6 +28,8 @@ namespace TorrentStream {
 
         public static readonly ConcurrentDictionary<string, IUriStream> m_TorrentStreams = new ();
 
+        public static readonly ConcurrentDictionary<WebSocket, bool> m_ActiveWebSockets = new ();
+
         private static async Task<(Stream?, bool)> GetTorrentStream ( string url ) {
             if ( m_DownloadedTorrents.Contains ( url ) ) return (null, true);
 
@@ -42,6 +44,7 @@ namespace TorrentStream {
                 return (null, false);
             }
         }
+
         private static string GetStringValueFromQuery ( string key, HttpContext httpContext ) {
             return httpContext.Request.Query.ContainsKey ( key ) ? httpContext.Request.Query.Where ( a => a.Key == key ).FirstOrDefault ().Value.First () ?? "" : "";
         }
@@ -67,29 +70,10 @@ namespace TorrentStream {
             }
 
             try {
-                TorrentManager manager;
-                if ( m_TorrentManagers.TryGetValue ( torrentPath, out var createdManager ) ) {
-                    manager = createdManager.Manager ?? throw new Exception ( "Manager is null!" );
-                } else {
-                    if ( torrentStream == null ) {
-                        context.Response.StatusCode = 404;
-                        return;
-                    }
-
-                    torrentStream.Position = 0;
-                    var torrent = await Torrent.LoadAsync ( torrentStream );
-                    manager = await m_ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
-                    await manager.StartAsync ();
-                    await manager.WaitForMetadataAsync ();
-                    m_TorrentManagers.TryAdd (
-                        torrentPath,
-                        new ManagerModel {
-                            DownloadPath = torrentPath,
-                            Manager = manager,
-                            Identifier = Convert.ToInt32 ( identifier ),
-                            MetadataId = manager.MetadataPath
-                        }
-                    );
+                var manager = await GetManager ( torrentPath, torrentStream, identifier );
+                if (manager == null) {
+                    context.Response.StatusCode = 404;
+                    return;
                 }
                 var iterator = 0;
                 foreach ( var file in manager.Files ) {
@@ -117,6 +101,32 @@ namespace TorrentStream {
             } catch {
                 context.Response.StatusCode = 500;
             }
+        }
+
+        private static async Task<TorrentManager?> GetManager ( string torrentPath, Stream? torrentStream, string identifier ) {
+            TorrentManager manager;
+            if ( m_TorrentManagers.TryGetValue ( torrentPath, out var createdManager ) ) {
+                manager = createdManager.Manager ?? throw new Exception ( "Manager is null!" );
+            } else {
+                if ( torrentStream == null ) return null;
+
+                torrentStream.Position = 0;
+                var torrent = await Torrent.LoadAsync ( torrentStream );
+                manager = await m_ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
+                await manager.StartAsync ();
+                await manager.WaitForMetadataAsync ();
+                m_TorrentManagers.TryAdd (
+                    torrentPath,
+                    new ManagerModel {
+                        DownloadPath = torrentPath,
+                        Manager = manager,
+                        Identifier = Convert.ToInt32 ( identifier ),
+                        MetadataId = manager.MetadataPath
+                    }
+                );
+            }
+
+            return manager;
         }
 
         public static async Task StartFullDownload ( HttpContext context ) {
@@ -187,6 +197,13 @@ namespace TorrentStream {
         public static async Task SaveState () {
             await m_ClientEngine.SaveStateAsync ( StateFilePath );
             await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values ) );
+
+            // close currently actived web sockets
+            if (m_ActiveWebSockets.Any()) {
+                foreach ( var socket in m_ActiveWebSockets.Keys ) {
+                    await socket.CloseAsync ( WebSocketCloseStatus.NormalClosure, "server is down", CancellationToken.None );
+                }
+            }
         }
 
         public static async Task LoadState () {
@@ -207,7 +224,9 @@ namespace TorrentStream {
         public static async Task TorrentWebSocket ( HttpContext context ) {
             if ( context.WebSockets.IsWebSocketRequest ) {
                 using var webSocket = await context.WebSockets.AcceptWebSocketAsync ();
+                m_ActiveWebSockets.TryAdd( webSocket, true );
                 await StartSocketSession ( webSocket );
+                if ( !m_ActiveWebSockets.TryRemove ( webSocket, out var result ) ) m_ActiveWebSockets.TryRemove ( webSocket, out var _ );
                 return;
             }
 

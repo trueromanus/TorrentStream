@@ -39,6 +39,7 @@ app.MapGet ( "/fulldownload", TorrentHandler.StartFullDownload );
 app.MapGet ( "/clearall", TorrentHandler.Finalization );
 app.MapGet ( "/ws", TorrentHandler.TorrentWebSocket );
 app.MapGet ( "/error", async ( context ) => { await context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( "Something went wrong :(" ) ); } );
+app.MapGet ( "/proxyfing", ProxyHandler.TorrentWebSocket );
 
 await TorrentHandler.LoadState ();
 
