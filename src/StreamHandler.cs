@@ -26,7 +26,7 @@ namespace TorrentStream {
 
         public static ConcurrentDictionary<string, ManagerModel> m_TorrentManagers = new ();
 
-        public static readonly ConcurrentDictionary<string, IUriStream> m_TorrentStreams = new ();
+        public static readonly ConcurrentDictionary<string, IHttpStream> m_TorrentStreams = new ();
 
         public static readonly ConcurrentDictionary<WebSocket, bool> m_ActiveWebSockets = new ();
 
@@ -89,11 +89,15 @@ namespace TorrentStream {
                 var isDownloaded = currentFile.BitField.PercentComplete >= 100;
 
                 if ( !isDownloaded ) {
-                    var httpStream = await manager.StreamProvider.CreateHttpStreamAsync ( currentFile, false );
-                    m_TorrentStreams.TryAdd ( torrentPath, httpStream );
+                    if ( manager.StreamProvider != null ) {
+                        var httpStream = await manager.StreamProvider.CreateHttpStreamAsync ( currentFile, false );
+                        if (httpStream != null) {
+                            m_TorrentStreams.TryAdd ( torrentPath, httpStream );
 
-                    context.Response.StatusCode = 302;
-                    context.Response.Headers.Location = httpStream.Uri.ToString ();
+                            context.Response.StatusCode = 302;
+                            context.Response.Headers.Location = httpStream.FullUri;
+                        }
+                    }
                 } else {
                     context.Response.StatusCode = 302;
                     context.Response.Headers.Location = ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ? "file:///" : "file://" ) + currentFile.FullPath;
@@ -163,7 +167,6 @@ namespace TorrentStream {
                     var torrent = await Torrent.LoadAsync ( torrentStream );
                     manager = await m_ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
                     await manager.StartAsync ();
-                    await manager.WaitForMetadataAsync ();
                     m_TorrentManagers.TryAdd (
                         torrentPath,
                         new ManagerModel {
@@ -185,8 +188,14 @@ namespace TorrentStream {
             if ( context is null ) throw new ArgumentNullException ( nameof ( context ) );
 
             await m_ClientEngine.StopAllAsync ();
+            foreach ( var manager in m_TorrentManagers ) {
+                if ( manager.Value.Manager == null ) continue;
+
+                await m_ClientEngine.RemoveAsync ( manager.Value.Manager );
+            }
             m_TorrentManagers.Clear ();
             m_TorrentStreams.Clear ();
+            m_DownloadedTorrents.Clear ();
 
             if ( Directory.Exists ( DownloadsPath ) ) Directory.Delete ( DownloadsPath, true );
 
