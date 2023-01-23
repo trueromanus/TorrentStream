@@ -1,6 +1,3 @@
-#if !DEBUG
-using System.Runtime.InteropServices;
-#endif
 using Microsoft.Extensions.Hosting.WindowsServices;
 using System.Text;
 using TorrentStream;
@@ -10,12 +7,6 @@ var webPort = string.IsNullOrEmpty ( webPortValue ) ? 0 : Convert.ToInt32 ( webP
 if ( webPort < 0 ) webPort = 0;
 
 GlobalConfiguration.Port = webPort > 0 ? webPort : 5082;
-
-#if !DEBUG
-if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ) {
-    WindowsExtras.AdjustConsoleWindow ( args.Any ( a => a.ToLowerInvariant () == "showconsole" ) );
-}
-#endif
 
 var options = new WebApplicationOptions {
     Args = args,

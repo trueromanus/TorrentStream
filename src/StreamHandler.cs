@@ -71,7 +71,7 @@ namespace TorrentStream {
 
             try {
                 var manager = await GetManager ( torrentPath, torrentStream, identifier );
-                if (manager == null) {
+                if ( manager == null ) {
                     context.Response.StatusCode = 404;
                     return;
                 }
@@ -91,7 +91,7 @@ namespace TorrentStream {
                 if ( !isDownloaded ) {
                     if ( manager.StreamProvider != null ) {
                         var httpStream = await manager.StreamProvider.CreateHttpStreamAsync ( currentFile, false );
-                        if (httpStream != null) {
+                        if ( httpStream != null ) {
                             m_TorrentStreams.TryAdd ( torrentPath, httpStream );
 
                             context.Response.StatusCode = 302;
@@ -167,6 +167,7 @@ namespace TorrentStream {
                     var torrent = await Torrent.LoadAsync ( torrentStream );
                     manager = await m_ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
                     await manager.StartAsync ();
+                    manager.TorrentStateChanged += ManagerTorrentStateChanged;
                     m_TorrentManagers.TryAdd (
                         torrentPath,
                         new ManagerModel {
@@ -181,6 +182,18 @@ namespace TorrentStream {
                 await context.Response.WriteAsync ( "Downloading started" );
             } catch {
                 context.Response.StatusCode = 500;
+            }
+        }
+
+        private static void ManagerTorrentStateChanged ( object? sender, TorrentStateChangedEventArgs e ) {
+            if ( e.TorrentManager == null ) return;
+
+            if ( e.TorrentManager.State == TorrentState.Seeding ) {
+                foreach ( var socket in m_ActiveWebSockets.Keys ) {
+                    if ( socket.State != WebSocketState.Open ) continue;
+                    var message = GetDownloadStatus ( e.TorrentManager );
+                    Task.Run ( async () => await socket.SendAsync ( message, WebSocketMessageType.Text, true, CancellationToken.None ) );
+                }
             }
         }
 
@@ -208,7 +221,7 @@ namespace TorrentStream {
             await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values ) );
 
             // close currently actived web sockets
-            if (m_ActiveWebSockets.Any()) {
+            if ( m_ActiveWebSockets.Any () ) {
                 foreach ( var socket in m_ActiveWebSockets.Keys ) {
                     await socket.CloseAsync ( WebSocketCloseStatus.NormalClosure, "server is down", CancellationToken.None );
                 }
@@ -221,11 +234,12 @@ namespace TorrentStream {
             m_ClientEngine = await ClientEngine.RestoreStateAsync ( StateFilePath );
             await m_ClientEngine.StartAllAsync (); // immediate start downloading after restoring
 
-            var content = await File.ReadAllTextAsync ( InnerStateFilePath);
+            var content = await File.ReadAllTextAsync ( InnerStateFilePath );
             var torrentManagers = JsonSerializer.Deserialize<List<ManagerModel>> ( content );
             if ( torrentManagers == null ) return;
-            foreach (var torrentManager in torrentManagers) {
+            foreach ( var torrentManager in torrentManagers ) {
                 torrentManager.Manager = m_ClientEngine.Torrents.FirstOrDefault ( a => a.MetadataPath == torrentManager.MetadataId );
+                if ( torrentManager.Manager != null ) torrentManager.Manager.TorrentStateChanged += ManagerTorrentStateChanged;
                 m_TorrentManagers.TryAdd ( torrentManager.DownloadPath, torrentManager );
             }
         }
@@ -233,7 +247,7 @@ namespace TorrentStream {
         public static async Task TorrentWebSocket ( HttpContext context ) {
             if ( context.WebSockets.IsWebSocketRequest ) {
                 using var webSocket = await context.WebSockets.AcceptWebSocketAsync ();
-                m_ActiveWebSockets.TryAdd( webSocket, true );
+                m_ActiveWebSockets.TryAdd ( webSocket, true );
                 await StartSocketSession ( webSocket );
                 if ( !m_ActiveWebSockets.TryRemove ( webSocket, out var result ) ) m_ActiveWebSockets.TryRemove ( webSocket, out var _ );
                 return;
@@ -274,10 +288,10 @@ namespace TorrentStream {
 
                     var manager = managerModel.Manager;
                     if ( manager.Files.All ( a => a.BitField.AllTrue ) ) {
-                        result.Add ( new StatusModel { Path = managerKey, All = true, Identifier = managerModel.Identifier } );
+                        result.Add ( new StatusModel { Path = managerKey, All = true, Id = managerModel.Identifier } );
                         continue;
                     }
-                    var model = new StatusModel { Path = managerKey, All = false, Identifier = managerModel.Identifier };
+                    var model = new StatusModel { Path = managerKey, All = false, Id = managerModel.Identifier };
                     var index = 0;
                     foreach ( var file in manager.Files ) {
                         model.Files.Add ( index, Convert.ToInt32 ( file.BitField.PercentComplete ) );
@@ -287,7 +301,19 @@ namespace TorrentStream {
                 }
             }
 
-            return Encoding.UTF8.GetBytes ( JsonSerializer.Serialize ( result ) ).AsMemory ();
+            return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( result ) ).AsMemory ();
+        }
+
+        private static ReadOnlyMemory<byte> GetDownloadStatus ( TorrentManager manager ) {
+            var managerModel = m_TorrentManagers.Values.FirstOrDefault ( a => a.Manager == manager );
+            if ( managerModel == null ) return new ReadOnlyMemory<byte> ();
+
+            if ( manager.Files.All ( a => a.BitField.AllTrue ) ) {
+                var model = new StatusModel { Path = managerModel.DownloadPath, All = true, Id = managerModel.Identifier };
+                return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( model ) ).AsMemory ();
+            }
+
+            return new ReadOnlyMemory<byte> ();
         }
 
     }

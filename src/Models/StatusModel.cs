@@ -15,7 +15,7 @@
         /// <summary>
         /// Identifier.
         /// </summary>
-        public int Identifier { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// All is ended.
