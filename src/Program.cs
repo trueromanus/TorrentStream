@@ -8,6 +8,13 @@ if ( webPort < 0 ) webPort = 0;
 
 GlobalConfiguration.Port = webPort > 0 ? webPort : 5082;
 
+#if !DEBUG
+if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ) {
+    var noConsole = args.Any ( a => a.ToLowerInvariant () == "-noconsole" );
+    WindowsExtras.AdjustConsoleWindow ( !noConsole );
+}
+#endif
+
 var options = new WebApplicationOptions {
     Args = args,
     ContentRootPath = WindowsServiceHelpers.IsWindowsService () ? AppContext.BaseDirectory : default
