@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Hosting.WindowsServices;
 using System.Text;
 using TorrentStream;
+#if !DEBUG
+using System.Runtime.InteropServices;
+#endif
 
 var webPortValue = Environment.GetEnvironmentVariable ( "WEB_PORT" );
 var webPort = string.IsNullOrEmpty ( webPortValue ) ? 0 : Convert.ToInt32 ( webPortValue );
