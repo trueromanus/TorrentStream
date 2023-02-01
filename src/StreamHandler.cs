@@ -177,6 +177,7 @@ namespace TorrentStream {
                             MetadataId = manager.MetadataPath
                         }
                     );
+                    SendMessageToSocket ( "nt:" + identifier );
                 }
                 context.Response.StatusCode = 200;
                 await context.Response.WriteAsync ( "Downloading started" );
@@ -194,6 +195,16 @@ namespace TorrentStream {
                     var message = GetDownloadStatus ( e.TorrentManager );
                     Task.Run ( async () => await socket.SendAsync ( message, WebSocketMessageType.Text, true, CancellationToken.None ) );
                 }
+            }
+        }
+
+        private static void SendMessageToSocket ( string message ) {
+            if ( !m_ActiveWebSockets.Any () ) return;
+
+            var messageInBytes = new ReadOnlyMemory<byte> ( Encoding.UTF8.GetBytes ( message ) );
+            foreach ( var socket in m_ActiveWebSockets.Keys ) {
+                if ( socket.State != WebSocketState.Open ) continue;
+                Task.Run ( async () => await socket.SendAsync ( messageInBytes, WebSocketMessageType.Text, true, CancellationToken.None ) );
             }
         }
 
@@ -276,6 +287,8 @@ namespace TorrentStream {
                         break;
                 }
             }
+
+            if ( m_ActiveWebSockets.ContainsKey ( webSocket ) ) m_ActiveWebSockets.TryRemove ( webSocket, out var _ );
         }
 
         private static ReadOnlyMemory<byte> GetDownloadStatus () {
@@ -316,6 +329,38 @@ namespace TorrentStream {
             return new ReadOnlyMemory<byte> ();
         }
 
+        public static async Task GetTorrents ( HttpContext context ) {
+            if ( m_TorrentManagers.IsEmpty ) {
+                await context.Response.WriteAsync ( "[]" );
+                return;
+            }
+
+            var managers = m_TorrentManagers.Values;
+
+            var result = new List<FullManagerModel> ();
+
+            foreach ( var manager in managers ) {
+                if ( manager.Manager == null ) continue;
+
+                result.Add (
+                    new FullManagerModel {
+                        Identifier = manager.Identifier,
+                        DownloadPath = manager.DownloadPath,
+                        AllDownloaded = manager.Manager.Bitfield.PercentComplete >= 100,
+                        Files = manager.Manager.Files
+                            .Select (
+                                a => new TorrentFileModel {
+                                    IsDownloaded = a.BitField.PercentComplete >= 100,
+                                    PercentComplete = Convert.ToInt32(a.BitField.PercentComplete),
+                                    DownloadedPath = a.DownloadCompleteFullPath
+                                }
+                        )
+                    }
+                );
+            }
+
+            await context.Response.WriteAsJsonAsync ( result );
+        }
     }
 
 }
