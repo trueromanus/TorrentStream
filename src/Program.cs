@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using System.Text;
 using TorrentStream;
@@ -58,4 +59,4 @@ await TorrentHandler.LoadState ();
 
 app.Run ();
 
-await TorrentHandler.SaveState ();
+await TorrentHandler.SaveStateAndStop ();

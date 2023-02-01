@@ -128,6 +128,7 @@ namespace TorrentStream {
                         MetadataId = manager.MetadataPath
                     }
                 );
+                await SaveState ();
             }
 
             return manager;
@@ -178,6 +179,7 @@ namespace TorrentStream {
                         }
                     );
                     SendMessageToSocket ( "nt:" + identifier );
+                    await SaveState ();
                 }
                 context.Response.StatusCode = 200;
                 await context.Response.WriteAsync ( "Downloading started" );
@@ -196,6 +198,8 @@ namespace TorrentStream {
                     Task.Run ( async () => await socket.SendAsync ( message, WebSocketMessageType.Text, true, CancellationToken.None ) );
                 }
             }
+
+            Task.Run ( SaveState );
         }
 
         private static void SendMessageToSocket ( string message ) {
@@ -221,15 +225,16 @@ namespace TorrentStream {
             m_TorrentStreams.Clear ();
             m_DownloadedTorrents.Clear ();
 
+            await SaveState ();
+
             if ( Directory.Exists ( DownloadsPath ) ) Directory.Delete ( DownloadsPath, true );
 
             context.Response.StatusCode = 200;
             await context.Response.WriteAsync ( "Completed" );
         }
 
-        public static async Task SaveState () {
-            await m_ClientEngine.SaveStateAsync ( StateFilePath );
-            await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values ) );
+        public static async Task SaveStateAndStop () {
+            await SaveState();
 
             // close currently actived web sockets
             if ( m_ActiveWebSockets.Any () ) {
@@ -237,6 +242,11 @@ namespace TorrentStream {
                     await socket.CloseAsync ( WebSocketCloseStatus.NormalClosure, "server is down", CancellationToken.None );
                 }
             }
+        }
+
+        public static async Task SaveState () {
+            await m_ClientEngine.SaveStateAsync ( StateFilePath );
+            await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values ) );
         }
 
         public static async Task LoadState () {
