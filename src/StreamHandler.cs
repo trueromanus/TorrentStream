@@ -192,14 +192,23 @@ namespace TorrentStream {
             if ( e.TorrentManager == null ) return;
 
             if ( e.TorrentManager.State == TorrentState.Seeding ) {
-                foreach ( var socket in m_ActiveWebSockets.Keys ) {
-                    if ( socket.State != WebSocketState.Open ) continue;
-                    var message = GetDownloadStatus ( e.TorrentManager );
-                    Task.Run ( async () => await socket.SendAsync ( message, WebSocketMessageType.Text, true, CancellationToken.None ) );
-                }
+                var message = GetDownloadStatus ( e.TorrentManager );
+                if ( !string.IsNullOrEmpty ( message ) ) SendMessageToSocket ( message );
             }
 
             Task.Run ( SaveState );
+        }
+
+        private static string GetDownloadStatus ( TorrentManager manager ) {
+            var managerModel = m_TorrentManagers.Values.FirstOrDefault ( a => a.Manager == manager );
+            if ( managerModel == null ) return "";
+
+            if ( manager.Files.All ( a => a.BitField.AllTrue ) ) {
+                var model = new StatusModel { Path = managerModel.DownloadPath, All = true, Id = managerModel.Identifier };
+                return "ds:" + JsonSerializer.Serialize ( model );
+            }
+
+            return "";
         }
 
         private static void SendMessageToSocket ( string message ) {
@@ -234,7 +243,7 @@ namespace TorrentStream {
         }
 
         public static async Task SaveStateAndStop () {
-            await SaveState();
+            await SaveState ();
 
             // close currently actived web sockets
             if ( m_ActiveWebSockets.Any () ) {
@@ -327,18 +336,6 @@ namespace TorrentStream {
             return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( result ) ).AsMemory ();
         }
 
-        private static ReadOnlyMemory<byte> GetDownloadStatus ( TorrentManager manager ) {
-            var managerModel = m_TorrentManagers.Values.FirstOrDefault ( a => a.Manager == manager );
-            if ( managerModel == null ) return new ReadOnlyMemory<byte> ();
-
-            if ( manager.Files.All ( a => a.BitField.AllTrue ) ) {
-                var model = new StatusModel { Path = managerModel.DownloadPath, All = true, Id = managerModel.Identifier };
-                return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( model ) ).AsMemory ();
-            }
-
-            return new ReadOnlyMemory<byte> ();
-        }
-
         public static async Task GetTorrents ( HttpContext context ) {
             if ( m_TorrentManagers.IsEmpty ) {
                 await context.Response.WriteAsync ( "[]" );
@@ -361,7 +358,7 @@ namespace TorrentStream {
                             .Select (
                                 a => new TorrentFileModel {
                                     IsDownloaded = a.BitField.PercentComplete >= 100,
-                                    PercentComplete = Convert.ToInt32(a.BitField.PercentComplete),
+                                    PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
                                     DownloadedPath = a.DownloadCompleteFullPath
                                 }
                         )
