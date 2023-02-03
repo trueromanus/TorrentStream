@@ -76,7 +76,10 @@ namespace TorrentStream {
                     return;
                 }
                 var iterator = 0;
-                foreach ( var file in manager.Files ) {
+                var torrentFiles = manager.Files
+                    .OrderBy ( a => a.Path )
+                    .ToList();
+                foreach ( var file in torrentFiles ) {
                     await manager.SetFilePriorityAsync ( file, iterator == activeFileIndex ? Priority.High : Priority.DoNotDownload );
                     iterator++;
                 }
@@ -85,7 +88,7 @@ namespace TorrentStream {
                     if ( m_TorrentStreams.TryRemove ( torrentPath, out var stream ) ) stream.Dispose ();
                 }
 
-                var currentFile = manager.Files[activeFileIndex];
+                var currentFile = torrentFiles.ElementAt(activeFileIndex);
                 var isDownloaded = currentFile.BitField.PercentComplete >= 100;
 
                 if ( !isDownloaded ) {
@@ -238,6 +241,8 @@ namespace TorrentStream {
 
             if ( Directory.Exists ( DownloadsPath ) ) Directory.Delete ( DownloadsPath, true );
 
+            SendMessageToSocket ( "dt:" );
+
             context.Response.StatusCode = 200;
             await context.Response.WriteAsync ( "Completed" );
         }
@@ -361,13 +366,81 @@ namespace TorrentStream {
                                     PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
                                     DownloadedPath = a.DownloadCompleteFullPath
                                 }
-                        )
+                            )
+                            .OrderBy ( a => a.DownloadedPath )
+                            .ToList ()
                     }
                 );
             }
 
             await context.Response.WriteAsJsonAsync ( result );
         }
+
+        public static async Task ClearOnlyTorrent ( HttpContext context ) {
+            context.Response.ContentType = "text/plain";
+            if ( context.Request.Query.Count != 1 ) {
+                context.Response.StatusCode = 204;
+                return;
+            }
+
+            var downloadPath = GetStringValueFromQuery ( "path", context );
+
+            if ( !m_TorrentManagers.ContainsKey ( downloadPath ) ) {
+                await context.Response.WriteAsync ( "Already not exists" );
+                return;
+            }
+
+            await RemoveTorrentFromTracker ( downloadPath );
+
+            await SaveState ();
+
+            SendMessageToSocket ( "dt:" );
+
+            await context.Response.WriteAsync ( "Completed" );
+        }
+
+        private static async Task RemoveTorrentFromTracker ( string downloadPath ) {
+            if ( m_TorrentManagers.TryGetValue ( downloadPath, out var torrentManager ) ) {
+                if ( torrentManager.Manager != null ) {
+                    await torrentManager.Manager.StopAsync ();
+                    await m_ClientEngine.RemoveAsync ( torrentManager.Manager );
+
+                    if ( !m_TorrentManagers.TryRemove ( downloadPath, out var _ ) ) {
+                        m_TorrentManagers.TryRemove ( downloadPath, out var _ );
+                    }
+                }
+            }
+
+            m_DownloadedTorrents.Remove ( downloadPath );
+            if ( !m_TorrentStreams.TryRemove ( downloadPath, out var _ ) ) m_TorrentStreams.TryRemove ( downloadPath, out var _ );
+        }
+
+        public static async Task ClearTorrentAndData ( HttpContext context ) {
+            context.Response.ContentType = "text/plain";
+            if ( context.Request.Query.Count != 1 ) {
+                context.Response.StatusCode = 204;
+                return;
+            }
+
+            var downloadPath = GetStringValueFromQuery ( "path", context );
+
+
+            if ( m_TorrentManagers.TryGetValue ( downloadPath, out var torrent ) ) {
+                if ( torrent == null || torrent.Manager == null ) {
+                    await context.Response.WriteAsync ( "Already not exists" );
+                    return;
+                }
+                await RemoveTorrentFromTracker ( downloadPath );
+                Directory.Delete ( torrent.Manager.ContainingDirectory, true );
+            }
+
+            await SaveState ();
+
+            SendMessageToSocket ( "dt:" );
+
+            await context.Response.WriteAsync ( "Completed" );
+        }
+
     }
 
 }

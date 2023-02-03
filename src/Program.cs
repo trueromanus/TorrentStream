@@ -50,6 +50,8 @@ app.MapGet ( "/online", TorrentHandler.StartDownloadForOnlineStreaming );
 app.MapGet ( "/fulldownload", TorrentHandler.StartFullDownload );
 app.MapGet ( "/torrents", TorrentHandler.GetTorrents );
 app.MapGet ( "/clearall", TorrentHandler.Finalization );
+app.MapGet ( "/clearonlytorrent", TorrentHandler.ClearOnlyTorrent );
+app.MapGet ( "/cleartorrentanddata", TorrentHandler.ClearTorrentAndData );
 app.MapGet ( "/ws", TorrentHandler.TorrentWebSocket );
 app.MapGet ( "/error", async ( context ) => { await context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( "Something went wrong :(" ) ); } );
 app.MapGet ( "/proxyvideolist", ProxyHandler.ProxyVideolist );
