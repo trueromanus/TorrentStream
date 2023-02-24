@@ -40,12 +40,15 @@ namespace TorrentStream {
 
             var path = GetStringValueFromQuery ( "path", context );
 
-            var httpClient = new HttpClient ();
-            httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36" );
-            var videopart = await httpClient.GetStreamAsync ( path );
+            Stream videopart;
+            try {
+                videopart = await GetVideoPart ( path );
+            } catch {
+                videopart = await GetVideoPart ( path );
+            }
 
             context.Response.ContentType = "video/mp2t";
-            context.Response.Headers.Add( "Content-Disposition", "attachment; filename=file.ts" );
+            context.Response.Headers.Add ( "Content-Disposition", "attachment; filename=file.ts" );
             context.Response.StatusCode = 200;
 
             var buffer = new byte[1024 * 2];
@@ -55,10 +58,16 @@ namespace TorrentStream {
                 await context.Response.Body.WriteAsync ( buffer, 0, bytesCount );
             }
 
-            await context.Response.Body.FlushAsync();
+            await context.Response.Body.FlushAsync ();
             context.Response.Body.Close ();
         }
 
+        private static async Task<Stream> GetVideoPart ( string path ) {
+            var httpClient = new HttpClient ();
+            httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36" );
+            var videopart = await httpClient.GetStreamAsync ( path );
+            return videopart;
+        }
     }
 
 }
