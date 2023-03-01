@@ -131,6 +131,7 @@ namespace TorrentStream {
                         MetadataId = manager.MetadataPath
                     }
                 );
+                SendMessageToSocket ( "nt:" + identifier );
                 await SaveState ();
             }
 
