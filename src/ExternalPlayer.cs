@@ -18,7 +18,7 @@ namespace TorrentStream {
 
         private const string SynchronizationVolumeCommand = "svm";
 
-        private static readonly HashSet<string> m_commands = new HashSet<string> {
+        private static readonly HashSet<string> m_commands = new () {
             SourceCommand,
             VolumeCommand,
             StateCommand,
@@ -55,14 +55,14 @@ namespace TorrentStream {
 
                 if ( receiveResult.Count == 0 ) break;
 
-                var messageContent = Encoding.UTF8.GetString ( buffer.ToArray () );
+                var messageContent = Encoding.UTF8.GetString ( buffer[..receiveResult.Count].ToArray () );
                 var parts = messageContent.Split ( ":" );
                 if ( parts.Length != 2 ) continue;
 
                 var command = parts[0];
                 var parameter = parts[1];
 
-                if ( !m_commands.Contains( command ) ) continue;
+                if ( !m_commands.Contains ( command ) ) continue;
 
                 foreach ( var socket in GetOtherSockets ( webSocket ) ) await SendToSocket ( socket, command, parameter );
             }
