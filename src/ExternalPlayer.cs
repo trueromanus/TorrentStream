@@ -14,6 +14,8 @@ namespace TorrentStream {
 
         private const string StateCommand = "st";
 
+        private const string MuteCommand = "mt";
+
         private const string SynchronizationStateCommand = "sst";
 
         private const string SynchronizationVolumeCommand = "svm";
@@ -23,7 +25,8 @@ namespace TorrentStream {
             VolumeCommand,
             StateCommand,
             SynchronizationStateCommand,
-            SynchronizationVolumeCommand
+            SynchronizationVolumeCommand,
+            MuteCommand
         };
 
         public static async Task ExternalWebSocket ( HttpContext context ) {
