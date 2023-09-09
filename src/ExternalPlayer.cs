@@ -6,7 +6,9 @@ namespace TorrentStream {
 
     public class ExternalPlayer {
 
-        public static readonly ConcurrentDictionary<WebSocket, bool> m_ActiveWebSockets = new ();
+        public static readonly ConcurrentDictionary<WebSocket, string> m_ActiveWebSockets = new ();
+
+        public static readonly ConcurrentDictionary<WebSocket, bool> m_NewWebSockets = new ();
 
         private const string SourceCommand = "sc";
 
@@ -16,9 +18,15 @@ namespace TorrentStream {
 
         private const string MuteCommand = "mt";
 
+        private const string SeekCommand = "sk";
+
+        private const string RoleCommand = "ro";
+
         private const string SynchronizationStateCommand = "sst";
 
         private const string SynchronizationVolumeCommand = "svm";
+
+        private const string SynchronizationSeekCommand = "ssk";
 
         private static readonly HashSet<string> m_commands = new () {
             SourceCommand,
@@ -26,7 +34,9 @@ namespace TorrentStream {
             StateCommand,
             SynchronizationStateCommand,
             SynchronizationVolumeCommand,
-            MuteCommand
+            MuteCommand,
+            SeekCommand,
+            SynchronizationSeekCommand
         };
 
         public static async Task ExternalWebSocket ( HttpContext context ) {
@@ -36,13 +46,18 @@ namespace TorrentStream {
             }
 
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync ();
-            m_ActiveWebSockets.TryAdd ( webSocket, true );
+            m_NewWebSockets.TryAdd ( webSocket, true );
             await StartSocketSession ( webSocket );
         }
 
         private static ReadOnlyMemory<byte> GetMessageAsBytes ( string command, string message ) => Encoding.UTF8.GetBytes ( $"{command}:{message}" ).AsMemory ();
 
-        private static IEnumerable<WebSocket> GetOtherSockets ( WebSocket sender ) => m_ActiveWebSockets.Keys.Where ( a => sender != a && a.State == WebSocketState.Open );
+        private static IEnumerable<WebSocket> GetOtherSockets ( WebSocket sender, string recipient = "" ) {
+            return m_ActiveWebSockets
+                .Where ( a => a.Key != sender && a.Key.State == WebSocketState.Open && ( string.IsNullOrEmpty ( recipient ) || a.Value == recipient ) )
+                .Select ( a => a.Key )
+                .ToList ();
+        }
 
         private static async Task SendToSocket ( WebSocket socket, string command, string message ) {
             await socket.SendAsync ( GetMessageAsBytes ( command, message ), WebSocketMessageType.Text, true, CancellationToken.None );
@@ -60,14 +75,26 @@ namespace TorrentStream {
 
                 var messageContent = Encoding.UTF8.GetString ( buffer[..receiveResult.Count].ToArray () );
                 var parts = messageContent.Split ( ":" );
-                if ( parts.Length != 2 ) continue;
+                if ( parts.Length == 3 ) {
+                    var recepient = parts[0];
+                    var command = parts[1];
+                    var parameter = parts[2];
 
-                var command = parts[0];
-                var parameter = parts[1];
+                    if ( !m_commands.Contains ( command ) ) continue;
 
-                if ( !m_commands.Contains ( command ) ) continue;
+                    foreach ( var socket in GetOtherSockets ( webSocket, recepient ) ) await SendToSocket ( socket, command, parameter );
+                }
 
-                foreach ( var socket in GetOtherSockets ( webSocket ) ) await SendToSocket ( socket, command, parameter );
+                if ( parts.Length == 2 ) {
+                    var command = parts[0];
+                    var parameter = parts[1];
+
+                    if ( !m_NewWebSockets.ContainsKey ( webSocket ) ) continue;
+                    if ( command != RoleCommand ) continue;
+
+                    if ( !m_ActiveWebSockets.TryAdd ( webSocket, parameter ) ) m_ActiveWebSockets.TryAdd ( webSocket, parameter );
+                    if ( !m_NewWebSockets.TryRemove ( webSocket, out _ ) ) m_NewWebSockets.TryRemove ( webSocket, out _ );
+                }
             }
 
             if ( m_ActiveWebSockets.ContainsKey ( webSocket ) ) m_ActiveWebSockets.TryRemove ( webSocket, out var _ );
