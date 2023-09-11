@@ -28,6 +28,8 @@ namespace TorrentStream {
 
         private const string SynchronizationSeekCommand = "ssk";
 
+        private const string SynchronizationMuteCommand = "smt";
+
         private static readonly HashSet<string> m_commands = new () {
             SourceCommand,
             VolumeCommand,
@@ -36,7 +38,8 @@ namespace TorrentStream {
             SynchronizationVolumeCommand,
             MuteCommand,
             SeekCommand,
-            SynchronizationSeekCommand
+            SynchronizationSeekCommand,
+            SynchronizationMuteCommand
         };
 
         public static async Task ExternalWebSocket ( HttpContext context ) {
