@@ -1,8 +1,11 @@
 # TorrentStream
 Simple web server for streaming torrent files in video players (like VLC, MPC-HC and so on)
 
+### Порт приложения?
+По умолчанию порт приложения `5082`. Поменять порт можно  определив переменную окружения `WEB_PORT`.
+
 ### Где хранятся скачанные файлы?
-Файлы хранятся в папке Downloads относительной папки где расположено приложение.
+Файлы хранятся в папке Downloads относительной папки где расположено приложение. Поменять основной путь можно определив переменную окружения `DOWNLOAD_PATH`.
 
 ### REST API
 **/online?index=X&id=Ypath=Z**  
