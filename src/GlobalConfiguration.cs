@@ -7,6 +7,8 @@
 
         public static int Port { get; set; } = 0;
 
+        public static string BaseFolder { get; set; } = "";
+
     }
 
 }

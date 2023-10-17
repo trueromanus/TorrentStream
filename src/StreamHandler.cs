@@ -14,13 +14,18 @@ namespace TorrentStream {
 
         private static ClientEngine m_ClientEngine;
 
-        static TorrentHandler () => m_ClientEngine = new ClientEngine ();
+        static TorrentHandler () {
+            var settingBuilder = new EngineSettingsBuilder {
+                CacheDirectory = Path.Combine ( GlobalConfiguration.BaseFolder, "cache" )
+            };
+            m_ClientEngine = new ClientEngine ( settingBuilder.ToSettings() );
+        }
 
-        private static readonly string DownloadsPath = Path.Combine ( Path.GetDirectoryName ( AppContext.BaseDirectory ) ?? "", "Downloads" );
+        private static readonly string DownloadsPath = Path.Combine ( GlobalConfiguration.BaseFolder, "Downloads" );
 
-        private static readonly string StateFilePath = Path.Combine ( Path.GetDirectoryName ( AppContext.BaseDirectory ) ?? "", "statefile" );
+        private static readonly string StateFilePath = Path.Combine ( GlobalConfiguration.BaseFolder, "statefile" );
 
-        private static readonly string InnerStateFilePath = Path.Combine ( Path.GetDirectoryName ( AppContext.BaseDirectory ) ?? "", "innerstatefile" );
+        private static readonly string InnerStateFilePath = Path.Combine ( GlobalConfiguration.BaseFolder, "innerstatefile" );
 
         public static readonly HashSet<string> m_DownloadedTorrents = new ();
 

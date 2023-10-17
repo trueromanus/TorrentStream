@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using System.Text;
 using TorrentStream;
@@ -7,10 +6,32 @@ using System.Runtime.InteropServices;
 #endif
 
 var webPortValue = Environment.GetEnvironmentVariable ( "WEB_PORT" );
+var downloadDirectory = Environment.GetEnvironmentVariable ( "DOWNLOAD_PATH" );
 var webPort = string.IsNullOrEmpty ( webPortValue ) ? 0 : Convert.ToInt32 ( webPortValue );
 if ( webPort < 0 ) webPort = 0;
 
 GlobalConfiguration.Port = webPort > 0 ? webPort : 5082;
+
+GlobalConfiguration.BaseFolder = Path.GetDirectoryName ( AppContext.BaseDirectory ) ?? "";
+
+if ( !string.IsNullOrEmpty ( downloadDirectory ) ) {
+    var directoryExists = Directory.Exists ( downloadDirectory );
+    if ( !directoryExists ) Console.WriteLine ( $"Directory {downloadDirectory} not found!" );
+
+    var directoryWritable = CheckIfDirectoryIsWritable ( downloadDirectory );
+    if ( !directoryWritable ) Console.WriteLine ( $"Directory {downloadDirectory} not writable or corrupt!" );
+
+    GlobalConfiguration.BaseFolder = downloadDirectory;
+}
+
+static bool CheckIfDirectoryIsWritable ( string downloadDirectory ) {
+    try {
+        File.Create ( Path.Combine ( downloadDirectory, Path.GetRandomFileName () ), 1, FileOptions.DeleteOnClose );
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 #if !DEBUG
 if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ) {
