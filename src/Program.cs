@@ -21,7 +21,7 @@ if ( !string.IsNullOrEmpty ( downloadDirectory ) ) {
     var directoryWritable = CheckIfDirectoryIsWritable ( downloadDirectory );
     if ( !directoryWritable ) Console.WriteLine ( $"Directory {downloadDirectory} not writable or corrupt!" );
 
-    GlobalConfiguration.BaseFolder = downloadDirectory;
+    if ( directoryExists && directoryWritable ) GlobalConfiguration.BaseFolder = downloadDirectory;
 }
 
 static bool CheckIfDirectoryIsWritable ( string downloadDirectory ) {
