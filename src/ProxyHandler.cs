@@ -17,6 +17,8 @@ namespace TorrentStream {
 
             var path = GetStringValueFromQuery ( "path", context );
 
+            if ( string.IsNullOrEmpty ( path ) ) return;
+
             var httpClient = new HttpClient {
                 DefaultRequestVersion = HttpVersion.Version20,
                 DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
