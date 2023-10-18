@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Hosting.WindowsServices;
+using System.Net;
 using System.Text;
 using TorrentStream;
 #if !DEBUG
 using System.Runtime.InteropServices;
 #endif
 
-var listenAddres = Environment.GetEnvironmentVariable ( "LISTEN_ADDR" );
-listenAddres = string.IsNullOrEmpty(listenAddres) ? "127.0.0.1" : listenAddres;
+var listenAddress = Environment.GetEnvironmentVariable ( "LISTEN_ADDR" );
 var webPortValue = Environment.GetEnvironmentVariable ( "WEB_PORT" );
 var downloadDirectory = Environment.GetEnvironmentVariable ( "DOWNLOAD_PATH" );
 var webPort = string.IsNullOrEmpty ( webPortValue ) ? 0 : Convert.ToInt32 ( webPortValue );
@@ -50,7 +50,11 @@ var options = new WebApplicationOptions {
 var builder = WebApplication.CreateBuilder ( options );
 builder.WebHost.ConfigureKestrel (
     options => {
-        options.Listen(System.Net.IPAddress.Parse(listenAddres),GlobalConfiguration.Port);
+        if ( string.IsNullOrEmpty ( listenAddress ) ) {
+            options.ListenLocalhost ( GlobalConfiguration.Port );
+        } else {
+            options.Listen ( IPAddress.Parse ( listenAddress ), GlobalConfiguration.Port );
+        }
         options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes ( 10 );
         options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes ( 5 );
     }
