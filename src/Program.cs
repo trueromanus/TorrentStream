@@ -5,6 +5,8 @@ using TorrentStream;
 using System.Runtime.InteropServices;
 #endif
 
+var listenAddres = Environment.GetEnvironmentVariable ( "LISTEN_ADDR" );
+listenAddres = string.IsNullOrEmpty(listenAddres) ? "127.0.0.1" : listenAddres;
 var webPortValue = Environment.GetEnvironmentVariable ( "WEB_PORT" );
 var downloadDirectory = Environment.GetEnvironmentVariable ( "DOWNLOAD_PATH" );
 var webPort = string.IsNullOrEmpty ( webPortValue ) ? 0 : Convert.ToInt32 ( webPortValue );
@@ -48,7 +50,7 @@ var options = new WebApplicationOptions {
 var builder = WebApplication.CreateBuilder ( options );
 builder.WebHost.ConfigureKestrel (
     options => {
-        options.ListenLocalhost ( GlobalConfiguration.Port );
+        options.Listen(System.Net.IPAddress.Parse(listenAddres),GlobalConfiguration.Port);
         options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes ( 10 );
         options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes ( 5 );
     }
