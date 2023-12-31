@@ -18,7 +18,7 @@ namespace TorrentStream {
             var settingBuilder = new EngineSettingsBuilder {
                 CacheDirectory = Path.Combine ( GlobalConfiguration.BaseFolder, "cache" )
             };
-            m_ClientEngine = new ClientEngine ( settingBuilder.ToSettings() );
+            m_ClientEngine = new ClientEngine ( settingBuilder.ToSettings () );
         }
 
         private static readonly string DownloadsPath = Path.Combine ( GlobalConfiguration.BaseFolder, "Downloads" );
@@ -83,7 +83,7 @@ namespace TorrentStream {
                 var iterator = 0;
                 var torrentFiles = manager.Files
                     .OrderBy ( a => a.Path )
-                    .ToList();
+                    .ToList ();
                 foreach ( var file in torrentFiles ) {
                     await manager.SetFilePriorityAsync ( file, iterator == activeFileIndex ? Priority.High : Priority.DoNotDownload );
                     iterator++;
@@ -93,7 +93,7 @@ namespace TorrentStream {
                     if ( m_TorrentStreams.TryRemove ( torrentPath, out var stream ) ) stream.Dispose ();
                 }
 
-                var currentFile = torrentFiles.ElementAt(activeFileIndex);
+                var currentFile = torrentFiles.ElementAt ( activeFileIndex );
                 var isDownloaded = currentFile.BitField.PercentComplete >= 100;
 
                 if ( !isDownloaded ) {
@@ -272,8 +272,12 @@ namespace TorrentStream {
         public static async Task LoadState () {
             if ( !File.Exists ( StateFilePath ) ) return;
 
-            m_ClientEngine = await ClientEngine.RestoreStateAsync ( StateFilePath );
-            await m_ClientEngine.StartAllAsync (); // immediate start downloading after restoring
+            try {
+                m_ClientEngine = await ClientEngine.RestoreStateAsync ( StateFilePath );
+            } catch {
+                m_ClientEngine = new ClientEngine ();
+            }
+            await m_ClientEngine.StartAllAsync (); // immediate start downloading after starting
 
             var content = await File.ReadAllTextAsync ( InnerStateFilePath );
             var torrentManagers = JsonSerializer.Deserialize<List<ManagerModel>> ( content );
