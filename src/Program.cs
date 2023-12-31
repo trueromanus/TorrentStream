@@ -2,6 +2,7 @@ using Microsoft.Extensions.Hosting.WindowsServices;
 using System.Net;
 using System.Text;
 using TorrentStream;
+using TorrentStream.SerializerContexts;
 #if !DEBUG
 using System.Runtime.InteropServices;
 #endif
@@ -48,6 +49,9 @@ var options = new WebApplicationOptions {
 };
 
 var builder = WebApplication.CreateBuilder ( options );
+builder.Services.ConfigureHttpJsonOptions ( options => {
+    options.SerializerOptions.TypeInfoResolverChain.Insert ( 0, TorrentStreamSerializerContext.Default );
+} );
 builder.WebHost.ConfigureKestrel (
     options => {
         if ( string.IsNullOrEmpty ( listenAddress ) ) {

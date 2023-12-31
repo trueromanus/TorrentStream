@@ -13,6 +13,7 @@ namespace TorrentStream.SerializerContexts {
     [JsonSerializable ( typeof ( List<ManagerModel> ) )]
     [JsonSerializable ( typeof ( string ) )]
     [JsonSerializable ( typeof ( int ) )]
+    [JsonSourceGenerationOptions ( PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase )]
     public partial class TorrentStreamSerializerContext : JsonSerializerContext {
     }
 
