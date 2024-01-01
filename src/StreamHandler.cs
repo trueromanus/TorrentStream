@@ -7,6 +7,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using TorrentStream.Models;
+using TorrentStream.SerializerContexts;
 
 namespace TorrentStream {
 
@@ -214,7 +215,7 @@ namespace TorrentStream {
 
             if ( manager.Files.All ( a => a.BitField.AllTrue ) ) {
                 var model = new StatusModel { Path = managerModel.DownloadPath, All = true, Id = managerModel.Identifier };
-                return "ds:" + JsonSerializer.Serialize ( model );
+                return "ds:" + JsonSerializer.Serialize ( model, TorrentStreamSerializerContext.Default.StatusModel );
             }
 
             return "";
@@ -266,7 +267,7 @@ namespace TorrentStream {
 
         public static async Task SaveState () {
             await m_ClientEngine.SaveStateAsync ( StateFilePath );
-            await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values ) );
+            await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values.AsEnumerable(), TorrentStreamSerializerContext.Default.IEnumerableManagerModel ) );
         }
 
         public static async Task LoadState () {
@@ -280,7 +281,7 @@ namespace TorrentStream {
             await m_ClientEngine.StartAllAsync (); // immediate start downloading after starting
 
             var content = await File.ReadAllTextAsync ( InnerStateFilePath );
-            var torrentManagers = JsonSerializer.Deserialize<List<ManagerModel>> ( content );
+            var torrentManagers = JsonSerializer.Deserialize ( content, typeof ( List<ManagerModel> ), TorrentStreamSerializerContext.Default ) as List<ManagerModel>;
             if ( torrentManagers == null ) return;
             foreach ( var torrentManager in torrentManagers ) {
                 torrentManager.Manager = m_ClientEngine.Torrents.FirstOrDefault ( a => a.MetadataPath == torrentManager.MetadataId );
@@ -348,7 +349,7 @@ namespace TorrentStream {
                 }
             }
 
-            return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( result ) ).AsMemory ();
+            return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( result.AsEnumerable(), TorrentStreamSerializerContext.Default.IEnumerableStatusModel ) ).AsMemory ();
         }
 
         public static async Task GetTorrents ( HttpContext context ) {
@@ -383,7 +384,7 @@ namespace TorrentStream {
                 );
             }
 
-            await context.Response.WriteAsJsonAsync ( result );
+            await context.Response.WriteAsJsonAsync ( result.AsEnumerable(), typeof(IEnumerable<FullManagerModel>), TorrentStreamSerializerContext.Default );
         }
 
         public static async Task ClearOnlyTorrent ( HttpContext context ) {

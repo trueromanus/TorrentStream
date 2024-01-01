@@ -54,7 +54,7 @@ namespace TorrentStream {
             }
 
             context.Response.ContentType = "video/mp2t";
-            context.Response.Headers.Add ( "Content-Disposition", "attachment; filename=file.ts" );
+            context.Response.Headers["Content-Disposition"] = "attachment; filename=file.ts";
             context.Response.StatusCode = 200;
 
             var buffer = new byte[1024 * 2];
