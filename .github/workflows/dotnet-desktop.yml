@@ -75,7 +75,7 @@ jobs:
     - name: apt-update
       run: sudo apt-get update -qq
     - name: apt get packages
-      run: sudo apt-get install -y --no-install-recommends binutils-aarch64-linux-gnu gcc-multilib
+      run: sudo apt-get install -y binutils-aarch64-linux-gnu gcc-multilib libc6-dev
     - name: Restore dependencies
       run: dotnet restore src/TorrentStream.csproj
     - name: Publish x64 application
