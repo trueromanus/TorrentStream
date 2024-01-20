@@ -73,15 +73,13 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: apt-update
-      run: sudo apt-get update -qq
-    - name: apt get packages
-      run: sudo apt-get install -y binutils-aarch64-linux-gnu gcc-multilib libc6-dev
+      run: dotnet tool install --global dotnet-cross
     - name: Restore dependencies
       run: dotnet restore src/TorrentStream.csproj
     - name: Publish x64 application
       run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
     - name: Publish arm64 application
-      run: dotnet publish -r linux-arm64 -c Release --self-contained true src/TorrentStream.csproj        
+      run: dotnet cross publish -r linux-arm64 -c Release --self-contained true src/TorrentStream.csproj        
     - uses: actions/upload-artifact@v3
       with:
         name: linux64
