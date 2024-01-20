@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  windows64:
     runs-on: windows-latest
 
     steps:
@@ -31,6 +31,28 @@ jobs:
         path: src/bin/Release/net8.0/win-x64/publish/TorrentStream.exe
     - name: Upload arm64 artifacts
       uses: actions/upload-artifact@v3
+  linux64:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v3
       with:
-        name: windowsarm64
-        path: src/bin/Release/net8.0/win-arm64/publish/TorrentStream.exe
+        dotnet-version: 8.0.x    
+
+    - name: Restore dependencies
+      run: dotnet restore src/TorrentStream.csproj
+    - name: Publish x64 application
+      run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
+    - name: Publish arm64 application
+      run: dotnet publish -r linux-arm64 -c Release --self-contained true src/TorrentStream.csproj        
+    - uses: actions/upload-artifact@v3
+      with:
+        name: linux64
+        path: src/bin/Release/net8.0/linux-x64/publish/TorrentStream
+    - uses: actions/upload-artifact@v3
+      with:
+        name: linuxarm64
+        path: src/bin/Release/net8.0/linux-arm64/publish/TorrentStream
