@@ -28,10 +28,6 @@ jobs:
       with:
         name: macos64
         path: src/bin/Release/net8.0/osx-x64/publish/TorrentStream
-    - name: Upload arm64 artifacts
-      uses: actions/upload-artifact@v3
-        name: macosarm64
-        path: src/bin/Release/net8.0/osx-arm64/publish/TorrentStream
   windows64:
     runs-on: windows-latest
 
