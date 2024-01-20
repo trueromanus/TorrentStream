@@ -40,8 +40,11 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 8.0.x    
-
+        dotnet-version: 8.0.x
+    - name: apt-update
+      run: sudo apt-get update -qq
+    - name: apt get packages
+      run: sudo apt-get install -y --no-install-recommends binutils-aarch64-linux-gnu
     - name: Restore dependencies
       run: dotnet restore src/TorrentStream.csproj
     - name: Publish x64 application
