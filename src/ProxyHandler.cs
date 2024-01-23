@@ -70,8 +70,8 @@ namespace TorrentStream {
 
         private static async Task<Stream> GetVideoPart ( string path ) {
             var httpClient = new HttpClient {
-                DefaultRequestVersion = HttpVersion.Version20,
-                DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
+                //DefaultRequestVersion = HttpVersion.Version20,
+                //DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
             };
             httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 AniLibriaQt/1.0.0" );
             var videopart = await httpClient.GetStreamAsync ( path );
