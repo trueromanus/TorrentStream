@@ -87,6 +87,7 @@ app.MapGet ( "/ws", TorrentHandler.TorrentWebSocket );
 app.MapGet ( "/error", async ( context ) => { await context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( "Something went wrong :(" ) ); } );
 app.MapGet ( "/proxyvideolist", ProxyHandler.ProxyVideolist );
 app.MapGet ( "/proxyvideopart", ProxyHandler.ProxyVideoPart );
+app.MapGet ( "/proxyvideopartfallback", ProxyHandler.ProxyVideoPartFallback );
 app.MapGet ( "/playerws", ExternalPlayer.ExternalWebSocket );
 
 await TorrentHandler.LoadState ();

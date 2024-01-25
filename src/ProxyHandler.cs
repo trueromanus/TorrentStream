@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text;
+using TorrentStream.ParameterMappers;
 
 namespace TorrentStream {
 
@@ -9,35 +10,30 @@ namespace TorrentStream {
             return httpContext.Request.Query.ContainsKey ( key ) ? httpContext.Request.Query.Where ( a => a.Key == key ).FirstOrDefault ().Value.First () ?? "" : "";
         }
 
-        public static async Task ProxyVideolist ( HttpContext context ) {
-            if ( context.Request.Query.Count != 1 ) {
-                context.Response.StatusCode = 404;
-                return;
-            }
+        public static async Task ProxyVideolist ( ProxyVideoListModel model ) {
+            if ( model.Context == null) return;
 
-            var path = GetStringValueFromQuery ( "path", context );
-
-            if ( string.IsNullOrEmpty ( path ) ) return;
+            if ( string.IsNullOrEmpty ( model.Path ) ) return;
 
             var httpClient = new HttpClient {
                 DefaultRequestVersion = HttpVersion.Version20,
                 DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
             };
             httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 AniLibriaQt/1.0.0" );
-            var medialist = await httpClient.GetStringAsync ( path );
+            var medialist = await httpClient.GetStringAsync ( model.Path );
 
-            var uri = new Uri ( path );
+            var uri = new Uri ( model.Path );
             var partPrefix = $"{uri.Scheme}://{uri.Host}";
             var result = new List<string> ();
             foreach ( var line in medialist.Split ( "\n" ) ) {
                 if ( line.StartsWith ( partPrefix ) ) {
-                    result.Add ( $"http://localhost:{GlobalConfiguration.Port}/proxyvideopart?path=" + line );
+                    result.Add ( $"http://localhost:{GlobalConfiguration.Port}/{( model.NeedFallback ? "proxyvideopartfallback" : "proxyvideopart" )}?path=" + line );
                 } else {
                     result.Add ( line );
                 }
             }
 
-            await context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( string.Join ( '\n', result ) ) );
+            await model.Context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( string.Join ( '\n', result ) ) );
         }
 
         public static async Task ProxyVideoPart ( HttpContext context ) {
@@ -63,19 +59,55 @@ namespace TorrentStream {
                 if ( bytesCount == 0 ) break;
                 await context.Response.Body.WriteAsync ( buffer, 0, bytesCount );
             }
+        }
 
+        private static async Task<Stream> GetVideoPart ( string path ) {
+            var httpClient = new HttpClient ();
+            httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 AniLibriaQt/1.0.0" );
+            var videopart = await httpClient.GetStreamAsync ( path );
+            return videopart;
+        }
+
+        private static async Task CopyStreamToResponse ( HttpContext context, MemoryStream stream ) {
+            stream.Position = 0;
+            await stream.CopyToAsync ( context.Response.Body );
             await context.Response.Body.FlushAsync ();
             context.Response.Body.Close ();
         }
 
-        private static async Task<Stream> GetVideoPart ( string path ) {
-            var httpClient = new HttpClient {
-                //DefaultRequestVersion = HttpVersion.Version20,
-                //DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
-            };
+        public static async Task ProxyVideoPartFallback ( HttpContext context ) {
+            if ( context.Request.Query.Count != 1 ) {
+                context.Response.StatusCode = 404;
+                return;
+            }
+
+            var path = GetStringValueFromQuery ( "path", context );
+
+            context.Response.ContentType = "video/mp2t";
+            context.Response.Headers["Content-Disposition"] = "attachment; filename=file.ts";
+            context.Response.StatusCode = 200;
+
+            try {
+                var stream = await TryGetVideoPart ( path, useHttp2: true );
+                await CopyStreamToResponse ( context, stream );
+            } catch {
+                Console.WriteLine ( "Try fallback to HTTP1.1" );
+                var stream = await TryGetVideoPart ( path, useHttp2: false ); // falback to HTTP1.1
+                await CopyStreamToResponse ( context, stream );
+            }
+        }
+
+        private static async Task<MemoryStream> TryGetVideoPart ( string path, bool useHttp2 ) {
+            var httpClient = new HttpClient ();
+            if ( useHttp2 ) {
+                httpClient.DefaultRequestVersion = HttpVersion.Version20;
+                httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
+            }
             httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 AniLibriaQt/1.0.0" );
             var videopart = await httpClient.GetStreamAsync ( path );
-            return videopart;
+            var result = new MemoryStream ();
+            await videopart.CopyToAsync ( result );
+            return result;
         }
     }
 
