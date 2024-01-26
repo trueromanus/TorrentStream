@@ -11,9 +11,9 @@ jobs:
     runs-on: macos-latest    
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
@@ -24,12 +24,12 @@ jobs:
     - name: Publish arm64 application
       run: dotnet publish -r osx-arm64 -c Release --self-contained true src/TorrentStream.csproj
     - name: Upload x64 artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: macos64
         path: src/bin/Release/net8.0/osx-x64/publish/TorrentStream
     - name: Upload arm64 artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: macosarm64
         path: src/bin/Release/net8.0/osx-arm64/publish/TorrentStream
@@ -39,9 +39,9 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
@@ -52,12 +52,12 @@ jobs:
     - name: Publish arm64 application
       run: dotnet publish -r win-arm64 -c Release --self-contained true src/TorrentStream.csproj
     - name: Upload x64 artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows64
         path: src/bin/Release/net8.0/win-x64/publish/TorrentStream.exe
     - name: Upload arm64 artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windowsarm64
         path: src/bin/Release/net8.0/win-arm64/publish/TorrentStream.exe
@@ -67,9 +67,9 @@ jobs:
     
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
     - name: apt-update
@@ -80,11 +80,11 @@ jobs:
       run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
     #- name: Publish arm64 application
     #  run: dotnet cross publish -r linux-arm64 -c Release --self-contained true src/TorrentStream.csproj        
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: linux64
         path: src/bin/Release/net8.0/linux-x64/publish/TorrentStream
-    #- uses: actions/upload-artifact@v3
+    #- uses: actions/upload-artifact@v4
     #  with:
     #    name: linuxarm64
     #    path: src/bin/Release/net8.0/linux-arm64/publish/TorrentStream
