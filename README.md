@@ -1,82 +1,23 @@
 # TorrentStream
 Simple web server for streaming torrent files in video players (like VLC, MPC-HC and so on)
 
-### Порт приложения?
-По умолчанию порт приложения `5082`. Поменять порт можно  определив переменную окружения `WEB_PORT`.
+# Documentation
+[English Documentation](https://github.com/trueromanus/TorrentStream/wiki/En-Documentation)  
+[Russian Documentation](https://github.com/trueromanus/TorrentStream/wiki/Ru-Documentation)
 
-### Где хранятся скачанные файлы?
-Файлы хранятся в папке Downloads относительной папки где расположено приложение. Поменять основной путь можно определив переменную окружения `DOWNLOAD_PATH`.
+# Install on linux
+[NixOS](https://github.com/trueromanus/TorrentStream/wiki/Nix-install)
 
-### Установка и запуск на NixOS
-
-```nix
-services.torrentstream.enable = true;
+# Build Requirements
+- DotNet 8.0+
+# Build Instructions
+```shell
+dotnet dotnet publish -r <platform-indetifier> -c Release --self-contained true src/TorrentStream.csproj
 ```
-
-Для сервиса доступны опции
-
-| имя опции    | тип данных      | значение по умолчанию | описание                                |
-|--------------|-----------------|-----------------------|-----------------------------------------|
-| enable       | bool            | false                 | Включить/выключить сервис               |
-| package      | package         | pkgs.torrentstream    | Какой пакет использовать                |
-| port         | uint16 (0-65536)| 5082                  | Порт на котором принимаются подключения |
-| openFirewall | bool            | false                 | Разрешить подключения к порту приложения|
-| address      | string          | "0.0.0.0"             | IP на который принимаются подключения   |
-
-Пример настройки сервиса:
-
-```nix
-services.torrentstream = {
-    enable = true;
-    port = 9999;
-    address = "192.168.1.100";
-    openFirewall = true;
-};
-```
-
-Директория скачивания - `/var/lib/torrentstream`
-
-### REST API
-**/online?index=X&id=Y&path=Z**  
-X - индекс файла в торренте по которому будет начато скачивание и запуск стриминга  
-Y - числовое значение используется как идентификатор внешней сущности  
-Z - полный URL для скачивания торрент файла (не magnet ссылка именно к файлу torrent)  
-Ответом (если Все удалось) будет redirect на ссылку для стриминга видеофайла (индекс которого указан в параметре index).
-Т.е. в плеер когда Вы положите эту (/online) ссылку внутри которой скачается файл торрента и начнется его скачивание во внутреннем клиенте и как результат
-произойдет redirect по ссылке для стриминга.  
-  
-**/fulldownload?id=Y&path=Z**  
-Y - числовое значение используется как идентификатор внешней сущности  
-Z - полный URL для скачивания торрент файла (не magnet ссылка именно к файлу torrent)  
-Ответ пустой. Если все передано корректно то скачается торрент файл и начнется скачание его контекта в клиенте.
-  
-**/torrents**  
-Ответ содержит данные о текущий торрентах в виде json.  
-Пример ответа:
-```json
-[
-  {
-    "Identifier": 1, 
-    "DownloadPath": "C:/blablabla/path",
-    "AllDownloaded": false,
-    "Files": [
-      {
-        "IsDownloaded": false,
-        "PercentComplete": 80,
-        "DownloadedPath": "C:/blablabla/path/file.mp4"
-      }
-    ]
-  }
-]
-```
-  
-**/clearall**  
-Ответ пустой. Удаляет все файлы и торренты доступные в клиенте.
-  
-**/clearonlytorrent?path=X**  
-X - URL к торрент файлу ранее переданный в запросы /online или /fulldownload  
-Ответ пустой. Удаляет торрент из клиента, уже загруженные файлы остаются в файловой системе.
-  
-**/cleartorrentanddata?path=X**  
-X - URL к торрент файлу ранее переданный в запросы /online или /fulldownload  
-Ответ пустой. Удаляет торрент из клиента и загруженные файлы в файловой системе
+`platform-identifier` can be:
+- osx-x64 (macOS with intel processor)
+- osx-arm64 (macOS with M1+ processor)
+- win-arm64
+- win-x64
+- linux-arm64
+- linux-x64
