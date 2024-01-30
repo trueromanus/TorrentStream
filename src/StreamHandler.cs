@@ -39,6 +39,18 @@ namespace TorrentStream {
         private static async Task<(Stream?, bool)> GetTorrentStream ( string url ) {
             if ( m_DownloadedTorrents.Contains ( url ) ) return (null, true);
 
+            if ( url.StartsWith ( "file://" ) ) {
+                var filePath = url.Replace ( "file:///", "" ).Replace ( "file://", "" );
+                try {
+                    using var file = File.OpenRead ( filePath );
+                    var innerStream = new MemoryStream ();
+                    await file.CopyToAsync ( innerStream );
+                    return (innerStream, true);
+                } catch {
+                    return (null, false);
+                }
+            }
+
             try {
                 var httpClient = new HttpClient ();
                 var downloadedContent = await httpClient.GetStreamAsync ( url );
@@ -267,7 +279,7 @@ namespace TorrentStream {
 
         public static async Task SaveState () {
             await m_ClientEngine.SaveStateAsync ( StateFilePath );
-            await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values.AsEnumerable(), TorrentStreamSerializerContext.Default.IEnumerableManagerModel ) );
+            await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableManagerModel ) );
         }
 
         public static async Task LoadState () {
@@ -349,7 +361,7 @@ namespace TorrentStream {
                 }
             }
 
-            return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( result.AsEnumerable(), TorrentStreamSerializerContext.Default.IEnumerableStatusModel ) ).AsMemory ();
+            return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableStatusModel ) ).AsMemory ();
         }
 
         public static async Task GetTorrents ( HttpContext context ) {
@@ -384,7 +396,7 @@ namespace TorrentStream {
                 );
             }
 
-            await context.Response.WriteAsJsonAsync ( result.AsEnumerable(), typeof(IEnumerable<FullManagerModel>), TorrentStreamSerializerContext.Default );
+            await context.Response.WriteAsJsonAsync ( result.AsEnumerable (), typeof ( IEnumerable<FullManagerModel> ), TorrentStreamSerializerContext.Default );
         }
 
         public static async Task ClearOnlyTorrent ( HttpContext context ) {
