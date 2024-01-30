@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+	<id>tv.anilibria.torrentstream</id>
+
+	<launchable type="desktop-id">tv.anilibria.anilibria.desktop</launchable>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>BSD-2</project_license>
+
+	<name>Anilibria</name>
+
+	<summary>
+		Web server for streaming video from downloading(ed) torrents to players like VLC, MPV, MPC-HC etc.
+	</summary>
+
+	<description>
+		<p>Web server for streaming video from downloading(ed) torrents to players like VLC, MPV, MPC-HC etc.</p>
+	</description>
+
+	<screenshots>
+		<screenshot type="default">
+			<image>https://raw.githubusercontent.com/KnightMurloc/flathub/tv.anilibria.anilibria/screenshot.png</image>
+		</screenshot>
+	</screenshots>
+
+	<releases>
+		<release version="1.0.8" date="2024-01-30"/>
+	</releases>
+
+	<url type="homepage">https://github.com/trueromanus/TorrentStream</url>
+
+  <content_rating type="oars-1.1" />
+</component>
