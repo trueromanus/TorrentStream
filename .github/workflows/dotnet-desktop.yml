@@ -78,6 +78,8 @@ jobs:
       run: dotnet restore src/TorrentStream.csproj
     - name: Publish x64 application
       run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
+    - name: Publish arm x64 application      
+      run: dotnet publish -r linux-arm64 -c Release -p:CppCompilerAndLinker=clang-9 -p:SysRoot=/crossrootfs/arm64 --self-contained true src/TorrentStream.csproj
     - uses: actions/upload-artifact@v4
       with:
         name: linux64
