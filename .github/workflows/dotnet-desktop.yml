@@ -78,13 +78,30 @@ jobs:
       run: dotnet restore src/TorrentStream.csproj
     - name: Publish x64 application
       run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
-    #- name: Publish arm64 application
-    #  run: dotnet cross publish -r linux-arm64 -c Release --self-contained true src/TorrentStream.csproj        
     - uses: actions/upload-artifact@v4
       with:
         name: linux64
         path: src/bin/Release/net8.0/linux-x64/publish/TorrentStream
-    #- uses: actions/upload-artifact@v4
-    #  with:
-    #    name: linuxarm64
-    #    path: src/bin/Release/net8.0/linux-arm64/publish/TorrentStream
+  linuxarm64:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up QEMU
+      id: qemu
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm64
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore src/TorrentStream.csproj
+    - name: Publish x64 application
+      run: dotnet publish -r linux-arm64 -c Release --self-contained true src/TorrentStream.csproj
+    - uses: actions/upload-artifact@v4
+      with:
+        name: linuxarm64
+        path: src/bin/Release/net8.0/linux-arm64/publish/TorrentStream
