@@ -18,7 +18,7 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
 		<PackageReference Include="MonoTorrent" Version="3.0.0-beta.rev0106" />
-		<PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.linux-x64.Microsoft.DotNet.ILCompiler" Version="8.0.1" />
+		<PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.linux-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-*" />
 	</ItemGroup>
 
 </Project>
