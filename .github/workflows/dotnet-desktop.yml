@@ -84,3 +84,7 @@ jobs:
       with:
         name: linux64
         path: src/bin/Release/net8.0/linux-x64/publish/TorrentStream
+    - uses: actions/upload-artifact@v4
+      with:
+        name: linuxarm64
+        path: src/bin/Release/net8.0/linux-arm64/publish/TorrentStream
