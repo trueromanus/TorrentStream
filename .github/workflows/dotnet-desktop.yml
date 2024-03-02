@@ -3,8 +3,6 @@ name: CI and Release
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   macos64:
@@ -27,11 +25,13 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: macos64
+        compression-level: 0
         path: src/bin/Release/net8.0/osx-x64/publish/TorrentStream
     - name: Upload arm64 artifacts
       uses: actions/upload-artifact@v4
       with:
         name: macosarm64
+        compression-level: 0
         path: src/bin/Release/net8.0/osx-arm64/publish/TorrentStream
         
   windows64:
@@ -55,11 +55,13 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows64
+        compression-level: 0
         path: src/bin/Release/net8.0/win-x64/publish/TorrentStream.exe
     - name: Upload arm64 artifacts
       uses: actions/upload-artifact@v4
       with:
         name: windowsarm64
+        compression-level: 0
         path: src/bin/Release/net8.0/win-arm64/publish/TorrentStream.exe
         
   linux64:
@@ -83,8 +85,10 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: linux64
+        compression-level: 0
         path: src/bin/Release/net8.0/linux-x64/publish/TorrentStream
     - uses: actions/upload-artifact@v4
       with:
         name: linuxarm64
+        compression-level: 0
         path: src/bin/Release/net8.0/linux-arm64/publish/TorrentStream
