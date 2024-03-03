@@ -3,8 +3,6 @@ name: CI and Release
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   macos64:
