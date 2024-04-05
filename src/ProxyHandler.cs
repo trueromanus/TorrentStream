@@ -20,7 +20,8 @@ namespace TorrentStream {
                 DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
             };
             httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 AniLibriaQt/1.0.0" );
-            var medialist = await httpClient.GetStringAsync ( model.Path );
+            var response = await httpClient.GetAsync ( model.Path );
+            var medialist = await response.Content.ReadAsStringAsync ();
 
             var uri = new Uri ( model.Path );
             var partPrefix = $"{uri.Scheme}://{uri.Host}";
@@ -33,6 +34,7 @@ namespace TorrentStream {
                 }
             }
 
+            model.Context.Response.ContentType = response.Content?.Headers?.ContentType?.MediaType ?? "application/x-mpegURL";
             await model.Context.Response.Body.WriteAsync ( Encoding.UTF8.GetBytes ( string.Join ( '\n', result ) ) );
         }
 
