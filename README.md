@@ -1,5 +1,5 @@
 # TorrentStream
-Simple web server for streaming torrent files in video players (like VLC, MPC-HC and so on)
+Simple web server for streaming torrent files in video players (like VLC, mpv, MPC-HC and so on)
 
 # Documentation
 [English Documentation](https://github.com/trueromanus/TorrentStream/wiki/En-Documentation)  
