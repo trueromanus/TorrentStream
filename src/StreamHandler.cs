@@ -297,6 +297,7 @@ namespace TorrentStream {
             if ( torrentManagers == null ) return;
             foreach ( var torrentManager in torrentManagers ) {
                 torrentManager.Manager = m_ClientEngine.Torrents.FirstOrDefault ( a => a.MetadataPath == torrentManager.MetadataId );
+                if ( torrentManager.Manager == null ) continue;
                 if ( torrentManager.Manager != null ) torrentManager.Manager.TorrentStateChanged += ManagerTorrentStateChanged;
                 m_TorrentManagers.TryAdd ( torrentManager.DownloadPath, torrentManager );
             }
@@ -453,7 +454,15 @@ namespace TorrentStream {
                     await context.Response.WriteAsync ( "Already not exists" );
                     return;
                 }
-                await RemoveTorrentFromTracker ( downloadPath );
+                try {
+                    await RemoveTorrentFromTracker ( downloadPath );
+                } catch  {
+                    //WORKAROUND: try to make once again after some timeout,
+                    //sometimes if we try to delete file we get error that file already used in another process
+                    //to overcome this error I make this workaround
+                    await Task.Delay ( 800 );
+                    await RemoveTorrentFromTracker ( downloadPath );
+                }
                 Directory.Delete ( torrent.Manager.ContainingDirectory, true );
             }
 
