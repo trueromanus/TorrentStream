@@ -77,7 +77,7 @@ jobs:
     - name: Publish x64 application
       run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
     - name: Publish arm x64 application      
-      run: dotnet publish -r linux-arm64 -c Release -p:PublishAot=false --self-contained true src/TorrentStream.csproj
+      run: dotnet publish -r linux-arm64 -c Release -p:PublishAot=false --self-contained true -p:PublishSingleFile=true src/TorrentStream.csproj
     - uses: actions/upload-artifact@v4
       with:
         name: linux64
