@@ -418,9 +418,9 @@ namespace TorrentStream {
 
             await SaveState ();
 
-            SendMessageToSocket ( "dt:" );
-
             await context.Response.WriteAsync ( "Completed" );
+
+            SendDeleteAfterSomeTimeout ();
         }
 
         private static async Task RemoveTorrentFromTracker ( string downloadPath ) {
@@ -456,7 +456,7 @@ namespace TorrentStream {
                 }
                 try {
                     await RemoveTorrentFromTracker ( downloadPath );
-                } catch  {
+                } catch {
                     //WORKAROUND: try to make once again after some timeout,
                     //sometimes if we try to delete file we get error that file already used in another process
                     //to overcome this error I make this workaround
@@ -468,11 +468,19 @@ namespace TorrentStream {
 
             await SaveState ();
 
-            SendMessageToSocket ( "dt:" );
-
             await context.Response.WriteAsync ( "Completed" );
+
+            SendDeleteAfterSomeTimeout ();
         }
 
+        private static void SendDeleteAfterSomeTimeout () {
+            _ = Task.Run (
+                async () => {
+                    await Task.Delay ( 800 );
+                    SendMessageToSocket ( "dt:" );
+                }
+            );
+        }
     }
 
 }
