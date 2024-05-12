@@ -21,15 +21,17 @@ if ( !string.IsNullOrEmpty ( downloadDirectory ) ) {
     var directoryExists = Directory.Exists ( downloadDirectory );
     if ( !directoryExists ) Console.WriteLine ( $"Directory {downloadDirectory} not found!" );
 
-    var directoryWritable = CheckIfDirectoryIsWritable ( downloadDirectory );
+    var directoryWritable = await CheckIfDirectoryIsWritable ( downloadDirectory );
     if ( !directoryWritable ) Console.WriteLine ( $"Directory {downloadDirectory} not writable or corrupt!" );
 
     if ( directoryExists && directoryWritable ) GlobalConfiguration.BaseFolder = downloadDirectory;
 }
 
-static bool CheckIfDirectoryIsWritable ( string downloadDirectory ) {
+static async Task<bool> CheckIfDirectoryIsWritable ( string downloadDirectory ) {
     try {
-        File.Create ( Path.Combine ( downloadDirectory, Path.GetRandomFileName () ), 1, FileOptions.DeleteOnClose );
+        var randomPath = Path.Combine ( downloadDirectory, Path.GetRandomFileName () );
+        await File.WriteAllTextAsync ( randomPath, " " );
+        File.Delete ( randomPath );
         return true;
     } catch {
         return false;
