@@ -123,8 +123,9 @@ namespace TorrentStream {
                     context.Response.StatusCode = 302;
                     context.Response.Headers.Location = ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ? "file:///" : "file://" ) + currentFile.FullPath;
                 }
-            } catch {
+            } catch ( Exception exception ) {
                 context.Response.StatusCode = 500;
+                await context.Response.WriteAsync ( "Error:" + exception.Message + "\n" + exception.StackTrace );
             }
         }
 
