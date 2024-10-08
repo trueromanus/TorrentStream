@@ -121,7 +121,10 @@ namespace TorrentStream {
                     }
                 } else {
                     context.Response.StatusCode = 302;
-                    context.Response.Headers.Location = ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ? "file:///" : "file://" ) + currentFile.FullPath;
+                    var fileName = Uri.EscapeDataString(Path.GetFileName(currentFile.FullPath));
+                    var filePath = Path.GetDirectoryName ( currentFile.FullPath ) ?? "";
+                    var fullPath = Path.Combine ( filePath, fileName );
+                    context.Response.Headers.Location = ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ? "file:///" : "file://" ) + fullPath;
                 }
             } catch ( Exception exception ) {
                 context.Response.StatusCode = 500;
