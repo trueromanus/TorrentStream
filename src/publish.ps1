@@ -1,5 +1,5 @@
 & "dotnet" publish -c Release -r win-x64 --self-contained true
-Compress-Archive -Path bin\Release\net8.0\win-x64\publish\TorrentStream.exe -DestinationPath win-x64.zip
+Compress-Archive -Path bin\Release\net8.0\win-x64\publish\TorrentStream.exe -DestinationPath windows64.zip
 & "dotnet" publish -c Release -r win-arm64 --self-contained true
 Compress-Archive -Path bin\Release\net8.0\win-arm64\publish\TorrentStream.exe -DestinationPath win-arm64.zip
 & "dotnet" publish -c Release -r osx-x64 --self-contained true

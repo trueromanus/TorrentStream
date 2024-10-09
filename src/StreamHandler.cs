@@ -8,8 +8,38 @@ using System.Text;
 using System.Text.Json;
 using TorrentStream.Models;
 using TorrentStream.SerializerContexts;
+using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TorrentStream {
+
+    public static class StreamProviderHelpers {
+
+        private static PropertyInfo? GetActiveStreamProperty ( [DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.NonPublicProperties )] Type type ) {
+            return type.GetProperties ( BindingFlags.NonPublic | BindingFlags.Instance ).FirstOrDefault ( a => a.Name == "ActiveStream" );
+        }
+
+        private static MethodInfo? GetDisposeMethod ( [DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.PublicMethods )] Type type ) {
+            return type.GetMethod ( "Dispose" );
+        }
+
+        public static void DisposeInnerStream ( StreamProvider streamProvider ) {
+            var type = typeof ( StreamProvider );
+
+            PropertyInfo? property = GetActiveStreamProperty ( type );
+            if ( property == null ) return;
+
+            object? activeStream = property.GetMethod?.Invoke ( streamProvider, null );
+            if ( activeStream == null ) return;
+
+            var activeStreamType = typeof ( Stream );
+
+            var method = GetDisposeMethod ( activeStreamType );
+            if ( method == null ) return;
+
+            method.Invoke ( activeStream, null );
+        }
+    }
 
     public static class TorrentHandler {
 
@@ -31,8 +61,6 @@ namespace TorrentStream {
         public static readonly HashSet<string> m_DownloadedTorrents = new ();
 
         public static ConcurrentDictionary<string, ManagerModel> m_TorrentManagers = new ();
-
-        public static readonly ConcurrentDictionary<string, IHttpStream> m_TorrentStreams = new ();
 
         public static readonly ConcurrentDictionary<WebSocket, bool> m_ActiveWebSockets = new ();
 
@@ -102,26 +130,21 @@ namespace TorrentStream {
                     iterator++;
                 }
 
-                if ( m_TorrentStreams.ContainsKey ( torrentPath ) ) {
-                    if ( m_TorrentStreams.TryRemove ( torrentPath, out var stream ) ) stream.Dispose ();
-                }
-
                 var currentFile = torrentFiles.ElementAt ( activeFileIndex );
                 var isDownloaded = currentFile.BitField.PercentComplete >= 100;
 
                 if ( !isDownloaded ) {
                     if ( manager.StreamProvider != null ) {
+                        StreamProviderHelpers.DisposeInnerStream ( manager.StreamProvider );
                         var httpStream = await manager.StreamProvider.CreateHttpStreamAsync ( currentFile, false );
                         if ( httpStream != null ) {
-                            m_TorrentStreams.TryAdd ( torrentPath, httpStream );
-
                             context.Response.StatusCode = 302;
                             context.Response.Headers.Location = httpStream.FullUri;
                         }
                     }
                 } else {
                     context.Response.StatusCode = 302;
-                    var fileName = Uri.EscapeDataString(Path.GetFileName(currentFile.FullPath));
+                    var fileName = Uri.EscapeDataString ( Path.GetFileName ( currentFile.FullPath ) );
                     var filePath = Path.GetDirectoryName ( currentFile.FullPath ) ?? "";
                     var fullPath = Path.Combine ( filePath, fileName );
                     context.Response.Headers.Location = ( RuntimeInformation.IsOSPlatform ( OSPlatform.Windows ) ? "file:///" : "file://" ) + fullPath;
@@ -257,7 +280,6 @@ namespace TorrentStream {
                 await m_ClientEngine.RemoveAsync ( manager.Value.Manager );
             }
             m_TorrentManagers.Clear ();
-            m_TorrentStreams.Clear ();
             m_DownloadedTorrents.Clear ();
 
             await SaveState ();
@@ -440,7 +462,6 @@ namespace TorrentStream {
             }
 
             m_DownloadedTorrents.Remove ( downloadPath );
-            if ( !m_TorrentStreams.TryRemove ( downloadPath, out var _ ) ) m_TorrentStreams.TryRemove ( downloadPath, out var _ );
         }
 
         public static async Task ClearTorrentAndData ( HttpContext context ) {
