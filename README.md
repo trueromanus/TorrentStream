@@ -12,7 +12,7 @@ Simple web server for streaming torrent files in video players (like VLC, mpv, M
 - DotNet 8.0+
 # Build Instructions
 ```shell
-dotnet dotnet publish -r <platform-indetifier> -c Release --self-contained true src/TorrentStream.csproj
+dotnet publish -r <platform-indetifier> -c Release --self-contained true src/TorrentStream.csproj
 ```
 `platform-identifier` can be:
 - osx-x64 (macOS with intel processor)

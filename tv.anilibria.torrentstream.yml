@@ -20,7 +20,7 @@ modules:
       - cp TorrentStream /app/bin/
     sources:
       - type: archive
-        url: https://github.com/trueromanus/TorrentStream/releases/download/1.0.1.7/linux64.zip
+        url: https://github.com/trueromanus/TorrentStream/releases/download/1.0.1.12/linux64.zip
         sha256: 7c1d08d26ca64cbc0e2d54b5c67ade145dcea53f85caac1e8a2f0b3f5878e43c
 finish-args:
   - --share=ipc
