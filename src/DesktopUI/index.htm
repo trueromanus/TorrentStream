@@ -1,0 +1,154 @@
+<html window-frame="normal">
+<head>
+    <style>
+        html {
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #app {
+            size: *;
+        }
+
+        .body-container {
+            size: *;
+            flow: horizontal;
+        }
+
+        .state-container {
+            flow: vertical;
+            width: 200px;
+            height: *;
+            overflow: auto;
+        }
+
+        .torrents-container {
+            width: *;
+            height: *;
+            flow: vertical;
+        }
+        .torrents-list-container {
+            width: *;
+            height: 2*;
+            flow: vertical;
+            overflow: auto;
+            background-color: red;
+        }
+        .torrents-info-container {
+            width: *;
+            height: 1*;
+            background-color: green;
+        }
+        .state-item {
+            width: *;
+            height: 24px;
+            flow: horizontal;
+        }
+        .state-item img {
+            margin-top: *;
+            margin-bottom: *;
+            margin-left: 4px;
+            margin-right: 6px;
+        }
+        .state-item span {
+            margin-top: 5px;
+            margin-left: 2px;
+        }
+        .state-title {
+            flow: horizontal;
+            width: *;
+            height: 20px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+        .state-title span {
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .selected-state {
+            background-color: lightgray;
+        }
+    </style>
+    <script type="module">
+        Window.this.caption = 'TorrentStream';
+
+        import { createApp, ref } from "./vue-esm.js";
+
+        createApp({
+            setup() {
+                const torrents = ref([]);
+                const states = ref([
+                    {
+                        title: 'All',
+                        icon: 'all.svg'
+                    },
+                    {
+                        title: 'Downloading',
+                        icon: 'downloading.svg'
+                    },
+                    {
+                        title: 'Seeding',
+                        icon: 'seeding.svg'
+                    },
+                    {
+                        title: 'Completed',
+                        icon: 'completed.svg'
+                    },
+                    {
+                        title: 'Runned',
+                        icon: 'active.svg'
+                    },
+                    {
+                        title: 'Stopped',
+                        icon: 'stop.svg'
+                    },
+                    {
+                        title: 'Errored',
+                        icon: 'error.svg'
+                    }
+                ]);
+                const selectedState = ref(states.value[0]);
+
+                function selectState(item) {
+                    selectedState.value = item;
+                }
+
+                return {
+                    torrents,
+                    states,
+                    selectedState,
+                    selectState
+                }
+            }
+        }).mount('#app');
+    </script>
+</head>
+<body>
+    <div id="app">
+        <div class="body-container">
+            <div class="state-container">
+                <div class="state-title">
+                    <span>Status</span>
+                </div>
+                <div v-for="(item, index) in states"
+                     :key="index"
+                     class="state-item"
+                     :class="{ 'selected-state': selectedState === item }"
+                     @click="selectState(item)">
+                    <img :src="item.icon" />
+                    <span>{{ item.title }}</span>
+                </div>
+            </div>
+            <div class="torrents-container">
+                <div class="torrents-list-container">
+                </div>
+                <div class="torrents-info-container">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

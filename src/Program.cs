@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Hosting.WindowsServices;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using TorrentStream;
 using TorrentStream.SerializerContexts;
@@ -93,6 +94,8 @@ app.MapGet ( "/proxyvideopartfallback", ProxyHandler.ProxyVideoPartFallback );
 app.MapGet ( "/playerws", ExternalPlayer.ExternalWebSocket );
 
 await TorrentHandler.LoadState ();
+
+DesktopUI.Run ();
 
 app.Run ();
 
