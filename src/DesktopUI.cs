@@ -61,6 +61,21 @@ namespace TorrentStream {
             return [];
         }
 
+        public static void StartTimerForRefreshTorrentsData () {
+            Task.Run (
+                () => {
+                    while (true) {
+                        try {
+                            m_itemsCache = TorrentHandler.GetTorrentsAsJson ();
+                        } catch ( Exception ex ) {
+                            Console.WriteLine ( ex );
+                        }
+                        Task.Delay ( 3000 );
+                    }
+                }
+            );
+        }
+
         public static void Run () {
             var path = SaveSciter ();
             SciterLoader.Initialize ( path );
@@ -72,6 +87,7 @@ namespace TorrentStream {
                     host.CreateMainWindow ( 300, 300, enableDebug: true, enableFeature: true );
                     host.Callbacks.AddProtocolHandler ( "http://", ProtocolHandler );
                     host.LoadFile ( "http://index.htm" );
+                    StartTimerForRefreshTorrentsData ();
                     host.Process ();
                 }
             );

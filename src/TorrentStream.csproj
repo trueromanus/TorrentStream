@@ -21,6 +21,7 @@
 	  <None Remove="DesktopUI\downloading.svg" />
 	  <None Remove="DesktopUI\error.svg" />
 	  <None Remove="DesktopUI\index.htm" />
+	  <None Remove="DesktopUI\layout.css" />
 	  <None Remove="DesktopUI\seeding.svg" />
 	  <None Remove="DesktopUI\stop.svg" />
 	  <None Remove="DesktopUI\vue-esm.js" />
@@ -59,6 +60,9 @@
 		</EmbeddedResource>
 		<EmbeddedResource Include="DesktopUI\error.svg">
 			<LogicalName>error.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\layout.css">
+			<LogicalName>layout.css</LogicalName>
 		</EmbeddedResource>
 		<EmbeddedResource Include="DesktopUI\seeding.svg">
 			<LogicalName>seeding.svg</LogicalName>

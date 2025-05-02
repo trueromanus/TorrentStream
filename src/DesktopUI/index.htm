@@ -1,27 +1,14 @@
 <html window-frame="normal">
 <head>
+    <link href="layout.css" rel="stylesheet"/>
     <style>
-        html {
-        }
-
         body {
             margin: 0;
             overflow: hidden;
         }
 
-        #app {
-            size: *;
-        }
-
-        .body-container {
-            size: *;
-            flow: horizontal;
-        }
-
         .state-container {
-            flow: vertical;
             width: 200px;
-            height: *;
             overflow: auto;
         }
 
@@ -42,24 +29,19 @@
             height: 1*;
             background-color: green;
         }
+
         .state-item {
-            width: *;
-            height: 24px;
-            flow: horizontal;
+            height: 30px;
         }
-        .state-item img {
-            margin-top: *;
-            margin-bottom: *;
+        .state-item div {
             margin-left: 4px;
             margin-right: 6px;
         }
         .state-item span {
-            margin-top: 5px;
+            padding-bottom: 0px;
             margin-left: 2px;
         }
         .state-title {
-            flow: horizontal;
-            width: *;
             height: 20px;
             margin-top: 8px;
             margin-bottom: 4px;
@@ -127,26 +109,26 @@
     </script>
 </head>
 <body>
-    <div id="app">
-        <div class="body-container">
-            <div class="state-container">
-                <div class="state-title">
-                    <span>Status</span>
-                </div>
-                <div v-for="(item, index) in states"
-                     :key="index"
-                     class="state-item"
-                     :class="{ 'selected-state': selectedState === item }"
-                     @click="selectState(item)">
-                    <img :src="item.icon" />
-                    <span>{{ item.title }}</span>
-                </div>
+    <div id="app" class="full-screen-size flex-row">
+        <div class="state-container flex-col height-100-percent">
+            <div class="state-title width-100-percent">
+                <span>Status</span>
             </div>
-            <div class="torrents-container">
-                <div class="torrents-list-container">
+            <div v-for="(item, index) in states"
+                 :key="index"
+                 class="state-item flex-row width-100-percent flex-row-items-center"
+                 :class="{ 'selected-state': selectedState === item }"
+                 @click="selectState(item)">
+                <div>
+                    <img :src="item.icon" height="50" width="20" />
                 </div>
-                <div class="torrents-info-container">
-                </div>
+                <span>{{ item.title }}</span>
+            </div>
+        </div>
+        <div class="torrents-container">
+            <div class="torrents-list-container">
+            </div>
+            <div class="torrents-info-container">
             </div>
         </div>
     </div>

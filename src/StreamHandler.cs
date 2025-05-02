@@ -10,6 +10,7 @@ using TorrentStream.Models;
 using TorrentStream.SerializerContexts;
 using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace TorrentStream {
 
@@ -424,6 +425,38 @@ namespace TorrentStream {
             }
 
             await context.Response.WriteAsJsonAsync ( result.AsEnumerable (), typeof ( IEnumerable<FullManagerModel> ), TorrentStreamSerializerContext.Default );
+        }
+
+        public static string GetTorrentsAsJson () {
+            if ( m_TorrentManagers.IsEmpty ) return "[]";
+
+            var managers = m_TorrentManagers.Values;
+
+            var result = new List<FullManagerModel> ();
+
+            foreach ( var manager in managers ) {
+                if ( manager.Manager == null ) continue;
+
+                result.Add (
+                    new FullManagerModel {
+                        Identifier = manager.Identifier,
+                        DownloadPath = manager.DownloadPath,
+                        AllDownloaded = manager.Manager.Bitfield.PercentComplete >= 100,
+                        Files = manager.Manager.Files
+                            .Select (
+                                a => new TorrentFileModel {
+                                    IsDownloaded = a.BitField.PercentComplete >= 100,
+                                    PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
+                                    DownloadedPath = a.DownloadCompleteFullPath
+                                }
+                            )
+                            .OrderBy ( a => a.DownloadedPath )
+                            .ToList ()
+                    }
+                );
+            }
+
+            return JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableFullManagerModel );
         }
 
         public static async Task ClearOnlyTorrent ( HttpContext context ) {
