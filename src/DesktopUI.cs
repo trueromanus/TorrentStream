@@ -63,14 +63,14 @@ namespace TorrentStream {
 
         public static void StartTimerForRefreshTorrentsData () {
             Task.Run (
-                () => {
+                async () => {
                     while (true) {
                         try {
                             m_itemsCache = TorrentHandler.GetTorrentsAsJson ();
                         } catch ( Exception ex ) {
                             Console.WriteLine ( ex );
                         }
-                        Task.Delay ( 3000 );
+                        await Task.Delay ( 3000 );
                     }
                 }
             );
