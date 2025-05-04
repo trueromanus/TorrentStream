@@ -25,7 +25,17 @@
             border-right: 1px solid lightgray;
             padding-right: 4px;
             padding-left: 4px;
-            text-wrap: nowrap;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            width: *;
+        }
+        .torrents-column-value {
+            padding-right: 4px;
+            padding-left: 4px;
+            border-right: 1px solid transparent;
+            overflow-x: hidden;
+            white-space: nowrap;
             text-overflow: ellipsis;
         }
 
@@ -215,7 +225,7 @@
                         <div v-for="(torrentColumn,subindex) in torrentColumns"
                              :key="subindex"
                              :style="{'width': torrentColumn.width + 'px'}"
-                             :class="{'torrents-column': true, 'flex-row': true, 'flex-row-items-right': torrentColumn.align === 'right'}">
+                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-items-right': torrentColumn.align === 'right'}">
                             <span>{{ torrent[torrentColumn.field] }}</span>
                         </div>
                     </div>
