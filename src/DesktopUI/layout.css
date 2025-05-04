@@ -8,9 +8,21 @@
         align-items: center;
     }
 
+    .flex-row-items-right {
+        align-items: flex-end;
+    }
+
     .flex-col {
         display: flex;
         flex-direction: column;
+    }
+
+    .flex-1-height {
+        flex: 1;
+    }
+
+    .flex-2-height {
+        flex: 2;
     }
 
     .full-screen-size {
@@ -36,8 +48,20 @@
         margin-bottom: *;
     }
 
+    .flex-row-items-right > * {
+        margin-left: *;
+    }
+
     .flex-col {
         flow: vertical;
+    }
+
+    .flex-1-height {
+        height: *;
+    }
+
+    .flex-2-height {
+        height: 2*;
     }
 
     .full-screen-size {

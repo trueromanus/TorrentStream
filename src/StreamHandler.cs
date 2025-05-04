@@ -427,21 +427,59 @@ namespace TorrentStream {
             await context.Response.WriteAsJsonAsync ( result.AsEnumerable (), typeof ( IEnumerable<FullManagerModel> ), TorrentStreamSerializerContext.Default );
         }
 
+        private static string ConvertToReadableSize ( long count ) {
+            if ( count < 0 ) return "";
+
+            string[] suffixes = { "B", "KiB", "MiB", "GiB", "TiB" };
+            int suffixIndex = 0;
+
+            double size = count;
+
+            while ( size >= 1024 && suffixIndex < suffixes.Length - 1 ) {
+                size /= 1024;
+                suffixIndex++;
+            }
+
+            return $"{size:0.##} {suffixes[suffixIndex]}";
+        }
+
+        private static string GetTorrentState ( TorrentState state ) {
+            return state switch {
+                TorrentState.Error => "Error",
+                TorrentState.Starting => "Started",
+                TorrentState.Stopped => "Stopped",
+                TorrentState.Stopping => "Stopping",
+                TorrentState.Seeding => "Seeding",
+                TorrentState.Paused => "Pause",
+                TorrentState.HashingPaused => "Hash Pause",
+                TorrentState.Downloading => "Download",
+                TorrentState.Metadata => "Metadata",
+                TorrentState.FetchingHashes => "Fetch Hash",
+                TorrentState.Hashing => "Hashing",
+                _ => ""
+            };
+        }
+
         public static string GetTorrentsAsJson () {
             if ( m_TorrentManagers.IsEmpty ) return "[]";
 
             var managers = m_TorrentManagers.Values;
 
-            var result = new List<FullManagerModel> ();
+            var result = new List<DesktopManageModel> ();
 
             foreach ( var manager in managers ) {
                 if ( manager.Manager == null ) continue;
 
                 result.Add (
-                    new FullManagerModel {
+                    new DesktopManageModel {
                         Identifier = manager.Identifier,
                         DownloadPath = manager.DownloadPath,
                         AllDownloaded = manager.Manager.Bitfield.PercentComplete >= 100,
+                        Percent = manager.Manager.Bitfield.PercentComplete,
+                        Size = ConvertToReadableSize ( manager.Manager.Bitfield.LengthInBytes ),
+                        TorrentName = manager.Manager.Name,
+                        Peers = manager.Manager.OpenConnections,
+                        Status = GetTorrentState(manager.Manager.State),
                         Files = manager.Manager.Files
                             .Select (
                                 a => new TorrentFileModel {
@@ -456,7 +494,7 @@ namespace TorrentStream {
                 );
             }
 
-            return JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableFullManagerModel );
+            return JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableDesktopManageModel );
         }
 
         public static async Task ClearOnlyTorrent ( HttpContext context ) {

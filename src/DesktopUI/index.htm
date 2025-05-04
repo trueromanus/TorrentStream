@@ -7,29 +7,32 @@
             overflow: hidden;
         }
 
-        .state-container {
-            width: 200px;
-            overflow: auto;
-        }
-
         .torrents-container {
             width: *;
             height: *;
             flow: vertical;
         }
         .torrents-list-container {
-            width: *;
-            height: 2*;
-            flow: vertical;
             overflow: auto;
-            background-color: red;
+            border-left: 1px solid lightgray;
         }
         .torrents-info-container {
             width: *;
             height: 1*;
             background-color: green;
         }
+        .torrents-column {
+            border-right: 1px solid lightgray;
+            padding-right: 4px;
+            padding-left: 4px;
+            text-wrap: nowrap;
+            text-overflow: ellipsis;
+        }
 
+        .state-container {
+            width: 200px;
+            overflow: auto;
+        }
         .state-item {
             height: 30px;
         }
@@ -38,7 +41,6 @@
             margin-right: 6px;
         }
         .state-item span {
-            padding-bottom: 0px;
             margin-left: 2px;
         }
         .state-title {
@@ -92,17 +94,88 @@
                         icon: 'error.svg'
                     }
                 ]);
+                const torrentColumns = ref([
+                    {
+                        title: "Name",
+                        width: 140,
+                        align: "left",
+                        field: "torrentName",
+                    },
+                    {
+                        title: "Size",
+                        width: 80,
+                        align: "right",
+                        field: "size",
+                    },
+                    {
+                        title: "Progress",
+                        width: 100,
+                        align: "left",
+                        field: "percent"
+                    },
+                    {
+                        title: "Status",
+                        width: 80,
+                        align: "right",
+                        field: "status"
+                    },
+                    {
+                        title: "Seeds",
+                        width: 60,
+                        align: "right",
+                        field: "peers"
+                    },
+                    {
+                        title: "Peers",
+                        width: 60,
+                        align: "right",
+                        field: "peers"
+                    },
+                    {
+                        title: "Down speed",
+                        width: 100,
+                        align: "right",
+                        field: "peers"
+                    },
+                    {
+                        title: "Up speed",
+                        width: 100,
+                        align: "right",
+                        field: "peers"
+                    }
+                ]);
                 const selectedState = ref(states.value[0]);
 
                 function selectState(item) {
                     selectedState.value = item;
                 }
 
+                async function refreshTorrent() {
+                    const response = await fetch("data.json");
+                    if (!response.ok) return;
+
+                    torrents.value = await response.json();
+                }
+
+                function startRefreshTorrent() {
+                    refreshTorrent();
+
+                    setInterval(
+                        () => {
+                            refreshTorrent();
+                        },
+                        4000 // each 4 seconds
+                    );
+                }
+
+                startRefreshTorrent();
+
                 return {
                     torrents,
                     states,
                     selectedState,
-                    selectState
+                    selectState,
+                    torrentColumns
                 }
             }
         }).mount('#app');
@@ -126,7 +199,27 @@
             </div>
         </div>
         <div class="torrents-container">
-            <div class="torrents-list-container">
+            <div class="torrents-list-container flex-column width-100-percent flex-2-height">
+                <div class="flex-row">
+                    <div v-for="(torrentColumn,index) in torrentColumns"
+                         :key="index"
+                         :style="{'width': torrentColumn.width + 'px'}"
+                         :class="{'torrents-column': true, 'flex-row': true, 'flex-row-items-right': torrentColumn.align === 'right'}">
+                        <span>{{ torrentColumn.title }}</span>
+                    </div>
+                </div>
+                <div class="flex-column">
+                    <div v-for="(torrent,index) in torrents"
+                         :key="index"
+                         class="flex-row">
+                        <div v-for="(torrentColumn,subindex) in torrentColumns"
+                             :key="subindex"
+                             :style="{'width': torrentColumn.width + 'px'}"
+                             :class="{'torrents-column': true, 'flex-row': true, 'flex-row-items-right': torrentColumn.align === 'right'}">
+                            <span>{{ torrent[torrentColumn.field] }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="torrents-info-container">
             </div>

@@ -3,6 +3,7 @@ using TorrentStream.Models;
 
 namespace TorrentStream.SerializerContexts {
 
+    [JsonSerializable ( typeof ( IEnumerable<DesktopManageModel> ) )]
     [JsonSerializable ( typeof ( IEnumerable<FullManagerModel> ) )]
     [JsonSerializable ( typeof ( IEnumerable<TorrentFileModel> ) )]
     [JsonSerializable ( typeof ( TorrentFileModel ) )]
