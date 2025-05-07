@@ -427,10 +427,15 @@ namespace TorrentStream {
             await context.Response.WriteAsJsonAsync ( result.AsEnumerable (), typeof ( IEnumerable<FullManagerModel> ), TorrentStreamSerializerContext.Default );
         }
 
-        private static string ConvertToReadableSize ( long count ) {
+        private static string ConvertToReadableSize ( long count, bool bytesSeconds = false ) {
             if ( count < 0 ) return "";
 
-            string[] suffixes = { "B", "KiB", "MiB", "GiB", "TiB" };
+            string[] suffixes;
+            if ( bytesSeconds ) {
+                suffixes = ["B/s", "KiB/s", "MiB/s", "GiB/s", "TiB/s"];
+            } else {
+                suffixes = ["B", "KiB", "MiB", "GiB", "TiB"];
+            }
             int suffixIndex = 0;
 
             double size = count;
@@ -470,16 +475,22 @@ namespace TorrentStream {
             foreach ( var manager in managers ) {
                 if ( manager.Manager == null ) continue;
 
+                var files = manager.Manager.Files
+                    .Select ( a => a.Length )
+                    .ToArray ();
                 result.Add (
                     new DesktopManageModel {
                         Identifier = manager.Identifier,
                         DownloadPath = manager.DownloadPath,
                         AllDownloaded = manager.Manager.Bitfield.PercentComplete >= 100,
                         Percent = manager.Manager.Bitfield.PercentComplete,
-                        Size = ConvertToReadableSize ( manager.Manager.Bitfield.LengthInBytes ),
+                        Size = ConvertToReadableSize ( files.Any () ? files.Sum () : 0 ),
                         TorrentName = manager.Manager.Name,
-                        Peers = manager.Manager.OpenConnections,
-                        Status = GetTorrentState(manager.Manager.State),
+                        Peers = manager.Manager.Peers.Available,
+                        Seeds = manager.Manager.Peers.Seeds,
+                        DownloadSpeed = ConvertToReadableSize ( manager.Manager.Monitor.DownloadRate, bytesSeconds: true ),
+                        UploadSpeed = ConvertToReadableSize ( manager.Manager.Monitor.UploadRate, bytesSeconds: true ),
+                        Status = GetTorrentState ( manager.Manager.State ),
                         Files = manager.Manager.Files
                             .Select (
                                 a => new TorrentFileModel {

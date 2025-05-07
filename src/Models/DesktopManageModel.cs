@@ -11,6 +11,13 @@
         public string Status { get; init; } = "";
 
         public int Peers { get; init; }
+
+        public int Seeds { get; init; }
+
+        public string DownloadSpeed { get; init; } = "";
+
+        public string UploadSpeed { get; init; } = "";
+
     }
 
 }

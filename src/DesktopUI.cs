@@ -61,6 +61,8 @@ namespace TorrentStream {
             return [];
         }
 
+        public static void Initialize() => m_itemsCache = TorrentHandler.GetTorrentsAsJson ();
+
         public static void StartTimerForRefreshTorrentsData () {
             Task.Run (
                 async () => {

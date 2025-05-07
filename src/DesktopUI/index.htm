@@ -133,7 +133,7 @@
                         title: "Seeds",
                         width: 60,
                         align: "right",
-                        field: "peers"
+                        field: "seeds"
                     },
                     {
                         title: "Peers",
@@ -145,13 +145,13 @@
                         title: "Down speed",
                         width: 100,
                         align: "right",
-                        field: "peers"
+                        field: "downloadSpeed"
                     },
                     {
                         title: "Up speed",
                         width: 100,
                         align: "right",
-                        field: "peers"
+                        field: "uploadSpeed"
                     }
                 ]);
                 const selectedState = ref(states.value[0]);
@@ -174,7 +174,7 @@
                         () => {
                             refreshTorrent();
                         },
-                        4000 // each 4 seconds
+                        3000 // update each 3 seconds
                     );
                 }
 
