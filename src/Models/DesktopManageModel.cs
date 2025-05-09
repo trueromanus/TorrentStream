@@ -18,6 +18,8 @@
 
         public string UploadSpeed { get; init; } = "";
 
+        public string Unique => DesktopUI.ComputeSha256Hash ( TorrentName + Size );
+
     }
 
 }

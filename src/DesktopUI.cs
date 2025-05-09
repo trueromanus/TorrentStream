@@ -1,6 +1,7 @@
 ﻿using EmptyFlow.SciterAPI;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace TorrentStream {
@@ -61,12 +62,12 @@ namespace TorrentStream {
             return [];
         }
 
-        public static void Initialize() => m_itemsCache = TorrentHandler.GetTorrentsAsJson ();
+        public static void Initialize () => m_itemsCache = TorrentHandler.GetTorrentsAsJson ();
 
         public static void StartTimerForRefreshTorrentsData () {
             Task.Run (
                 async () => {
-                    while (true) {
+                    while ( true ) {
                         try {
                             m_itemsCache = TorrentHandler.GetTorrentsAsJson ();
                         } catch ( Exception ex ) {
@@ -93,6 +94,13 @@ namespace TorrentStream {
                     host.Process ();
                 }
             );
+        }
+
+        public static string ComputeSha256Hash ( string value ) {
+            using var sha256Hash = SHA256.Create ();
+            var bytes = sha256Hash.ComputeHash ( Encoding.UTF8.GetBytes ( value ) );
+
+            return Convert.ToBase64String ( bytes );
         }
 
     }
