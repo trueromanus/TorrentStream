@@ -25,6 +25,14 @@
         flex: 2;
     }
 
+    .flex-1-width {
+        flex: 1;
+    }
+
+    .flex-2-width {
+        flex: 2;
+    }
+
     .full-screen-size {
         width: 100vw;
         height: 100vh;
@@ -62,6 +70,14 @@
 
     .flex-2-height {
         height: 2*;
+    }
+
+    .flex-1-width {
+        width: *;
+    }
+
+    .flex-2-width {
+        width: 2*;
     }
 
     .full-screen-size {

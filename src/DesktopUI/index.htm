@@ -1,6 +1,9 @@
+<!doctype html>
 <html window-frame="normal">
 <head>
-    <link href="layout.css" rel="stylesheet"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link href="layout.css" rel="stylesheet" />
     <style>
         body {
             margin: 0;
@@ -23,20 +26,31 @@
         }
         .torrents-column {
             border-right: 1px solid lightgray;
-            padding-right: 4px;
-            padding-left: 4px;
             text-overflow: ellipsis;
             white-space: nowrap;
             display: inline-block;
             width: *;
         }
+        .torrents-column > span {
+            margin-left: 4px;
+            margin-right: 4px;
+        }
         .torrents-column-value {
-            padding-right: 4px;
-            padding-left: 4px;
             border-right: 1px solid transparent;
             overflow-x: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
+        }
+        .torrents-column-value > span {
+            padding-left: 4px;
+            margin-right: 4px;
+        }
+        .torrents-resizer {
+            cursor: pointer;
+            width: 5px;
+        }
+        .selected-torrent {
+            background-color: lightgray;
         }
 
         .state-container {
@@ -108,53 +122,63 @@
                     {
                         title: "Name",
                         width: 140,
+                        minWidth: 140,
                         align: "left",
                         field: "torrentName",
                     },
                     {
                         title: "Size",
-                        width: 80,
+                        width: 95,
+                        minWidth: 95,
                         align: "right",
                         field: "size",
                     },
                     {
                         title: "Progress",
-                        width: 100,
+                        width: 95,
+                        minWidth: 95,
                         align: "left",
                         field: "percent"
                     },
                     {
                         title: "Status",
-                        width: 80,
-                        align: "right",
+                        width: 85,
+                        minWidth: 85,
                         field: "status"
                     },
                     {
                         title: "Seeds",
-                        width: 60,
+                        width: 65,
+                        minWidth: 65,
                         align: "right",
                         field: "seeds"
                     },
                     {
                         title: "Peers",
-                        width: 60,
+                        width: 65,
+                        minWidth: 65,
                         align: "right",
                         field: "peers"
                     },
                     {
                         title: "Down speed",
                         width: 100,
+                        minWidth: 100,
                         align: "right",
                         field: "downloadSpeed"
                     },
                     {
                         title: "Up speed",
                         width: 100,
+                        minWidth: 100,
                         align: "right",
                         field: "uploadSpeed"
                     }
                 ]);
                 const selectedState = ref(states.value[0]);
+                const selectedTorrent = ref(null);
+                const movedColumn = ref(null);
+                const movedColumnX = ref(0);
 
                 function selectState(item) {
                     selectedState.value = item;
@@ -178,14 +202,35 @@
                     );
                 }
 
+                function columnMouseMove(event) {
+                    if (!movedColumn.value) return;
+                    const difference = event.clientX - movedColumnX.value;
+                    movedColumn.value.width = movedColumn.value.width + difference;
+                    movedColumnX.value = event.clientX;
+                }
+
+                function columnMouseDown(event, column) {
+                    movedColumn.value = column;
+                    movedColumnX.value = event.clientX;
+                }
+
+                function columnMouseUp(event) {
+                    movedColumn.value = null;
+                    movedColumnX.value = 0;
+                }
+
                 startRefreshTorrent();
 
                 return {
                     torrents,
                     states,
                     selectedState,
+                    selectedTorrent,
                     selectState,
-                    torrentColumns
+                    torrentColumns,
+                    columnMouseMove,
+                    columnMouseDown,
+                    columnMouseUp,
                 }
             }
         }).mount('#app');
@@ -210,18 +255,21 @@
         </div>
         <div class="torrents-container">
             <div class="torrents-list-container flex-column width-100-percent flex-2-height">
-                <div class="flex-row">
+                <div class="flex-row" @mousemove="columnMouseMove($event)" @mouseup="columnMouseUp($event)">
                     <div v-for="(torrentColumn,index) in torrentColumns"
                          :key="index"
                          :style="{'width': torrentColumn.width + 'px'}"
                          :class="{'torrents-column': true, 'flex-row': true, 'flex-row-items-right': torrentColumn.align === 'right'}">
                         <span>{{ torrentColumn.title }}</span>
+                        <div class="flex-2-width"></div>
+                        <div @mousedown="columnMouseDown($event, torrentColumn)" class="torrents-resizer height-100-percent"></div>
                     </div>
                 </div>
                 <div class="flex-column">
                     <div v-for="(torrent,index) in torrents"
                          :key="index"
-                         class="flex-row">
+                         :class="{ 'flex-row': true, 'selected-torrent':  selectedTorrent === torrent}"
+                         @click="selectedTorrent = torrent">
                         <div v-for="(torrentColumn,subindex) in torrentColumns"
                              :key="subindex"
                              :style="{'width': torrentColumn.width + 'px'}"
