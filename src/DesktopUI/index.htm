@@ -188,7 +188,41 @@
                     const response = await fetch("data.json");
                     if (!response.ok) return;
 
-                    torrents.value = await response.json();
+                    const result = await response.json();
+                    if (!torrents.value.length) {
+                        torrents.value = result;
+                        return;
+                    }
+
+                    const map = {};
+                    for (const item of result) map[item.unique] = item;
+
+                    const needDelete = [];
+
+                    for (const torrent of torrents.value) {
+                        const existItem = map[torrent.unique];
+                        if (existItem) {
+                            const keys = Object.keys(torrent);
+                            for (const key of keys) {
+                                if (torrent[key] !== existItem[key]) {
+                                    torrent[key] = existItem[key];
+                                }
+                            }
+                        } else {
+                            console.log('need delete ', torrent.unique);
+                            needDelete.push(torrent);
+                        }
+                    }
+
+                    const torrentsMap = {};
+                    for (const torrent of torrents.value) torrentsMap[torrent.unique] = torrent;
+
+                    for (const newitem of result) {
+                        if (!torrentsMap[newitem.unique]) {
+                            torrents.value.push(newitem);
+                        }
+                    }
+                    torrents.value = torrents.value.filter(a => !needDelete.find(b => b === a));
                 }
 
                 function startRefreshTorrent() {
