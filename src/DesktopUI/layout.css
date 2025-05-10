@@ -8,8 +8,12 @@
         align-items: center;
     }
 
-    .flex-row-items-right {
-        align-items: flex-end;
+    .flex-row-justify-right {
+        justify-content: flex-end;
+    }
+
+    .flex-row-justify-center {
+        justify-content: center;
     }
 
     .flex-col {
@@ -45,6 +49,9 @@
     .height-100-percent {
         height: 100%;
     }
+
+    .stack {
+    }
 }
 @supports (flow:horizontal) {
     .flex-row {
@@ -56,8 +63,13 @@
         margin-bottom: *;
     }
 
-    .flex-row-items-right > * {
+    .flex-row-justify-right > * {
         margin-left: *;
+    }
+
+    .flex-row-justify-center {
+        margin-left: *;
+        margin-right: *;
     }
 
     .flex-col {
@@ -90,5 +102,9 @@
 
     .height-100-percent {
         height: *;
+    }
+
+    .stack {
+        flow: stack;
     }
 }

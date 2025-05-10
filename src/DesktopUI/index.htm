@@ -45,6 +45,21 @@
             padding-left: 4px;
             margin-right: 4px;
         }
+        .torrents-column-value-progress {
+            border-radius: 4px 4px;
+            background-color: #b3b3b3;
+            border: 1px solid lightgray;
+        }
+        .torrents-column-value-progress .blue-background {
+            border-radius: 4px 4px;
+            background-color: blue;
+            border: 1px solid white;
+            border-width: 0px;
+        }
+        .torrents-column-value-progress .percent-text {
+            filter: invert(1);
+            mix-blend-mode: difference;
+        }
         .torrents-resizer {
             cursor: pointer;
             width: 5px;
@@ -138,7 +153,8 @@
                         width: 95,
                         minWidth: 95,
                         align: "left",
-                        field: "percent"
+                        field: "percent",
+                        customView: "progress"
                     },
                     {
                         title: "Status",
@@ -253,6 +269,14 @@
                     movedColumnX.value = 0;
                 }
 
+                function getProgressPercent(torrent, column) {
+                    const width = column.width - 2;
+                    if (torrent.status <= 0) {
+                        return '0px';
+                    }
+                    return (torrent.status / 100) * width;
+                }
+
                 startRefreshTorrent();
 
                 return {
@@ -265,6 +289,7 @@
                     columnMouseMove,
                     columnMouseDown,
                     columnMouseUp,
+                    getProgressPercent
                 }
             }
         }).mount('#app');
@@ -293,7 +318,7 @@
                     <div v-for="(torrentColumn,index) in torrentColumns"
                          :key="index"
                          :style="{'width': torrentColumn.width + 'px'}"
-                         :class="{'torrents-column': true, 'flex-row': true, 'flex-row-items-right': torrentColumn.align === 'right'}">
+                         :class="{'torrents-column': true, 'flex-row': true, 'flex-row-justify-right': torrentColumn.align === 'right'}">
                         <span>{{ torrentColumn.title }}</span>
                         <div class="flex-2-width"></div>
                         <div @mousedown="columnMouseDown($event, torrentColumn)" class="torrents-resizer height-100-percent"></div>
@@ -306,9 +331,18 @@
                          @click="selectedTorrent = torrent">
                         <div v-for="(torrentColumn,subindex) in torrentColumns"
                              :key="subindex"
-                             :style="{'width': torrentColumn.width + 'px'}"
-                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-items-right': torrentColumn.align === 'right'}">
-                            <span>{{ torrent[torrentColumn.field] }}</span>
+                             :style="{'width': torrentColumn.width + 'px','height': '20px'}"
+                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-justify-right': torrentColumn.align === 'right'}">
+                            <div
+                                 v-if="torrentColumn.customView === 'progress'"
+                                 :style="{'width': torrentColumn.width - 2 + 'px'}"
+                                 class="torrents-column-value-progress height-100-percent stack">
+                                <div :style="{'width': getProgressPercent(torrent, torrentColumn) + 'px'}" class="height-100-percent blue-background"></div>
+                                <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
+                                    <span>{{ torrent[torrentColumn.field] }}</span>
+                                </div>
+                            </div>
+                            <span v-else>{{ torrent[torrentColumn.field] }}</span>
                         </div>
                     </div>
                 </div>
