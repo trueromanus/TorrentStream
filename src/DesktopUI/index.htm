@@ -22,6 +22,10 @@
         .torrents-info-container {
             border-left: 1px solid lightgray;
         }
+        .torrents-info-container .torrent-tabs {
+            height: 32px;
+            border-bottom: 1px solid lightgray;
+        }
         .torrents-column {
             border-right: 1px solid lightgray;
             text-overflow: ellipsis;
@@ -64,6 +68,15 @@
         }
         .selected-torrent {
             background-color: lightgray;
+        }
+        .torrent-icon-button {
+            width: 30px;
+            height: 30px;
+            border: 1px solid lightgray;
+            margin-right: 2px;
+        }
+        .torrent-icon-button > img {
+            margin-left: 4px;
         }
 
         .state-container {
@@ -349,7 +362,21 @@
                     </div>
                 </div>
             </div>
-            <div class="torrents-info-container width-100-percent flex-1-height">
+            <div class="torrents-info-container width-100-percent flex-1-height flex-col">
+                <div class="torrent-tabs flex-row">
+                    <div class="torrent-icon-button flex-row flex-row-items-center">
+                        <img src="playbutton.svg" height="20" width="20" />
+                    </div>
+                    <div class="torrent-icon-button flex-row flex-row-items-center">
+                        <img src="stopbutton.svg" height="20" width="20" />
+                    </div>
+                    <div class="torrent-icon-button flex-row flex-row-items-center">
+                        <img src="delete.svg" height="20" width="20" />
+                    </div>
+                </div>
+                <div class="height-100-percent">
+
+                </div>
             </div>
         </div>
     </div>

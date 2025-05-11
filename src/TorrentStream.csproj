@@ -16,14 +16,18 @@
 
 	<ItemGroup>
 	  <None Remove="DesktopUI\active.svg" />
+	  <None Remove="DesktopUI\add.svg" />
 	  <None Remove="DesktopUI\all.svg" />
 	  <None Remove="DesktopUI\completed.svg" />
+	  <None Remove="DesktopUI\delete.svg" />
 	  <None Remove="DesktopUI\downloading.svg" />
 	  <None Remove="DesktopUI\error.svg" />
 	  <None Remove="DesktopUI\index.htm" />
 	  <None Remove="DesktopUI\layout.css" />
+	  <None Remove="DesktopUI\playbutton.svg" />
 	  <None Remove="DesktopUI\seeding.svg" />
 	  <None Remove="DesktopUI\stop.svg" />
+	  <None Remove="DesktopUI\stopbutton.svg" />
 	  <None Remove="DesktopUI\vue-esm.js" />
 	</ItemGroup>
 
@@ -42,6 +46,12 @@
 		</EmbeddedResource>
 		<EmbeddedResource Include="../sciterbin/linuxarm64/libsciter.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(PROCESSOR_ARCHITECTURE)' != 'AMD64'">
 			<LogicalName>libsciter.so</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\add.svg">
+			<LogicalName>add.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\delete.svg">
+			<LogicalName>delete.svg</LogicalName>
 		</EmbeddedResource>
 		<EmbeddedResource Include="DesktopUI\index.htm">
 			<LogicalName>index.htm</LogicalName>
@@ -64,11 +74,17 @@
 		<EmbeddedResource Include="DesktopUI\layout.css">
 			<LogicalName>layout.css</LogicalName>
 		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\playbutton.svg">
+			<LogicalName>playbutton.svg</LogicalName>
+		</EmbeddedResource>
 		<EmbeddedResource Include="DesktopUI\seeding.svg">
 			<LogicalName>seeding.svg</LogicalName>
 		</EmbeddedResource>
 		<EmbeddedResource Include="DesktopUI\stop.svg">
 			<LogicalName>stop.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\stopbutton.svg">
+			<LogicalName>stopbutton.svg</LogicalName>
 		</EmbeddedResource>
 		<EmbeddedResource Include="DesktopUI\vue-esm.js">
 			<LogicalName>vue-esm.js</LogicalName>
