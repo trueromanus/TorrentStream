@@ -20,9 +20,7 @@
             border-left: 1px solid lightgray;
         }
         .torrents-info-container {
-            width: *;
-            height: 1*;
-            background-color: green;
+            border-left: 1px solid lightgray;
         }
         .torrents-column {
             border-right: 1px solid lightgray;
@@ -78,8 +76,10 @@
         .state-item div {
             margin-left: 4px;
             margin-right: 6px;
+            height: 30px;
         }
         .state-item span {
+            padding-top: 4px;
             margin-left: 2px;
         }
         .state-title {
@@ -306,10 +306,12 @@
                  class="state-item flex-row width-100-percent flex-row-items-center"
                  :class="{ 'selected-state': selectedState === item }"
                  @click="selectState(item)">
-                <div>
+                <div class="flex-row flex-row-items-center">
                     <img :src="item.icon" height="50" width="20" />
                 </div>
-                <span>{{ item.title }}</span>
+                <span>
+                    {{ item.title }}
+                </span>
             </div>
         </div>
         <div class="torrents-container">
@@ -347,7 +349,7 @@
                     </div>
                 </div>
             </div>
-            <div class="torrents-info-container">
+            <div class="torrents-info-container width-100-percent flex-1-height">
             </div>
         </div>
     </div>
