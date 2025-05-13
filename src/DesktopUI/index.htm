@@ -23,7 +23,7 @@
             border-left: 1px solid lightgray;
         }
         .torrents-info-container .torrent-tabs {
-            height: 32px;
+            height: 38px;
             border-bottom: 1px solid lightgray;
         }
         .torrents-column {
@@ -77,6 +77,27 @@
         }
         .torrent-icon-button > img {
             margin-left: 4px;
+        }
+        .left-button-corner {
+            border: 1px solid #C5C5C5;
+            border-radius: 6px 0 0 6px;
+        }
+        .right-button-corner {
+            border: 1px solid #C5C5C5;
+            border-radius: 0 6px 6px 0;
+        }
+        .selected-corner {
+            background-color: #E0E0E0;
+        }
+        .torrent-text-button {
+            width: 50px;
+            height: 24px;
+            padding-left: 3px;
+            padding-top: 3px;
+            margin-right: 2px;
+        }
+        .torrent-select {
+            width: 100px;
         }
 
         .state-container {
@@ -206,6 +227,15 @@
                 ]);
                 const selectedState = ref(states.value[0]);
                 const selectedTorrent = ref(null);
+                const torrentPages = ref([
+                    {
+                        title: 'Files'
+                    },
+                    {
+                        title: 'Peers'
+                    }
+                ]);
+                const selectedTorrentPage = ref('Files');
                 const movedColumn = ref(null);
                 const movedColumnX = ref(0);
 
@@ -302,7 +332,9 @@
                     columnMouseMove,
                     columnMouseDown,
                     columnMouseUp,
-                    getProgressPercent
+                    getProgressPercent,
+                    torrentPages,
+                    selectedTorrentPage
                 }
             }
         }).mount('#app');
@@ -363,7 +395,7 @@
                 </div>
             </div>
             <div class="torrents-info-container width-100-percent flex-1-height flex-col">
-                <div class="torrent-tabs flex-row">
+                <div v-if="selectedTorrent" class="torrent-tabs flex-row flex-row-items-center">
                     <div class="torrent-icon-button flex-row flex-row-items-center">
                         <img src="playbutton.svg" height="20" width="20" />
                     </div>
@@ -373,8 +405,16 @@
                     <div class="torrent-icon-button flex-row flex-row-items-center">
                         <img src="delete.svg" height="20" width="20" />
                     </div>
+                    <div class="flex-1-width">
+                    </div>
+                    <div class="torrent-text-button flex-row flex-row-items-center left-button-corner">
+                        Files
+                    </div>
+                    <div class="torrent-text-button flex-row flex-row-items-center right-button-corner">
+                        Peers
+                    </div>
                 </div>
-                <div class="height-100-percent">
+                <div v-if="selectedTorrent" class="height-100-percent">
 
                 </div>
             </div>
