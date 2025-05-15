@@ -493,10 +493,15 @@ namespace TorrentStream {
                         Status = GetTorrentState ( manager.Manager.State ),
                         Files = manager.Manager.Files
                             .Select (
-                                a => new TorrentFileModel {
+                                a => new DesktopTorrentFileModel {
                                     IsDownloaded = a.BitField.PercentComplete >= 100,
                                     PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
-                                    DownloadedPath = a.DownloadCompleteFullPath
+                                    DownloadedPath = a.DownloadCompleteFullPath,
+                                    Name = a.FullPath,
+                                    Percent = a.BitField.PercentComplete,
+                                    Priority = GetPriority ( a.Priority ),
+                                    Size = ConvertToReadableSize ( a.Length ),
+                                    Remaining = ""
                                 }
                             )
                             .OrderBy ( a => a.DownloadedPath )
@@ -505,7 +510,20 @@ namespace TorrentStream {
                 );
             }
 
-            return JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableDesktopManageModel );
+            return JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableDesktopManagerModel );
+        }
+
+        private static string GetPriority ( Priority priority ) {
+            return priority switch {
+                Priority.High => "High",
+                Priority.Highest => "Highest",
+                Priority.Normal => "Normal",
+                Priority.Low => "Low",
+                Priority.Lowest => "Lowest",
+                Priority.Immediate => "Immediate",
+                Priority.DoNotDownload => "Idle",
+                _ => ""
+            };
         }
 
         public static async Task ClearOnlyTorrent ( HttpContext context ) {

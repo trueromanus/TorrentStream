@@ -20,6 +20,8 @@
 
         public string Unique => DesktopUI.ComputeSha256Hash ( TorrentName + Size );
 
+        public new IEnumerable<DesktopTorrentFileModel> Files { get; init; } = Enumerable.Empty<DesktopTorrentFileModel> ();
+
     }
 
 }
