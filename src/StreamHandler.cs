@@ -470,7 +470,7 @@ namespace TorrentStream {
 
             var managers = m_TorrentManagers.Values;
 
-            var result = new List<DesktopManageModel> ();
+            var result = new List<DesktopManagerModel> ();
 
             foreach ( var manager in managers ) {
                 if ( manager.Manager == null ) continue;
@@ -479,7 +479,7 @@ namespace TorrentStream {
                     .Select ( a => a.Length )
                     .ToArray ();
                 result.Add (
-                    new DesktopManageModel {
+                    new DesktopManagerModel {
                         Identifier = manager.Identifier,
                         DownloadPath = manager.DownloadPath,
                         AllDownloaded = manager.Manager.Bitfield.PercentComplete >= 100,

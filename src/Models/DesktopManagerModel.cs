@@ -1,6 +1,6 @@
 ﻿namespace TorrentStream.Models {
 
-    public record DesktopManageModel : FullManagerModel {
+    public record DesktopManagerModel : FullManagerModel {
 
         public string TorrentName { get; init; } = "";
 
