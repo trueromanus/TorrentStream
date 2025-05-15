@@ -99,6 +99,9 @@
         .torrent-select {
             width: 100px;
         }
+        .torrent-info-inner-container {
+            overflow: auto;
+        }
 
         .state-container {
             width: 200px;
@@ -517,7 +520,7 @@
                         Peers
                     </div>
                 </div>
-                <div v-if="selectedTorrent && selectedTorrentPage === 'Files'" class="height-100-percent">
+                <div v-if="selectedTorrent && selectedTorrentPage === 'Files'" class="torrent-info-inner-container height-100-percent width-100-percent">
                     <div class="flex-row" @mousemove="columnMouseMove($event)" @mouseup="columnMouseUp($event)">
                         <div v-for="(torrentColumn,index) in torrentFilesColumns"
                             :key="index"
@@ -529,7 +532,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="selectedTorrent && selectedTorrentPage === 'Peers'" class="height-100-percent">
+                <div v-if="selectedTorrent && selectedTorrentPage === 'Peers'" class="torrent-info-inner-container height-100-percent width-100-percent">
                     <div class="flex-row" @mousemove="columnMouseMove($event)" @mouseup="columnMouseUp($event)">
                         <div v-for="(torrentColumn,index) in torrentPeerColumns"
                             :key="index"
