@@ -501,7 +501,7 @@ namespace TorrentStream {
                                     Percent = a.BitField.PercentComplete,
                                     Priority = GetPriority ( a.Priority ),
                                     Size = ConvertToReadableSize ( a.Length ),
-                                    Remaining = ""
+                                    Remaining = ConvertToReadableSize ( Convert.ToInt64 ( ( a.Length * 100 ) / a.BitField.PercentComplete ) )
                                 }
                             )
                             .OrderBy ( a => a.DownloadedPath )

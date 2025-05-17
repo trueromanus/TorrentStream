@@ -325,6 +325,7 @@
                 ])
                 const selectedState = ref(states.value[0]);
                 const selectedTorrent = ref(null);
+                const selectedTorrentFile = ref(null);
                 const torrentPages = ref([
                     {
                         title: 'Files'
@@ -434,7 +435,8 @@
                     torrentPages,
                     selectedTorrentPage,
                     torrentPeerColumns,
-                    torrentFilesColumns
+                    torrentFilesColumns,
+                    selectedTorrentFile
                 }
             }
         }).mount('#app');
@@ -531,6 +533,28 @@
                             <div @mousedown="columnMouseDown($event, torrentColumn)" class="torrents-resizer height-100-percent"></div>
                         </div>
                     </div>
+                    <div class="flex-column">
+                    <div v-for="(torrentFile,index) in selectedTorrent.files"
+                         :key="index"
+                         :class="{ 'flex-row': true, 'selected-torrent':  selectedTorrentFile === torrentFile}"
+                         @click="selectedTorrentFile = torrentFile">
+                        <div v-for="(torrentFileColumn,subindex) in torrentFilesColumns"
+                             :key="subindex"
+                             :style="{'width': torrentFileColumn.width + 'px','height': '20px'}"
+                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-justify-right': torrentFileColumn.align === 'right'}">
+                            <div
+                                 v-if="torrentFileColumn.customView === 'progress'"
+                                 :style="{'width': torrentFileColumn.width - 2 + 'px'}"
+                                 class="torrents-column-value-progress height-100-percent stack">
+                                <div :style="{'width': getProgressPercent(torrentFile, torrentFileColumn) + 'px'}" class="height-100-percent blue-background"></div>
+                                <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
+                                    <span>{{ torrentFile[torrentFileColumn.field] }}</span>
+                                </div>
+                            </div>
+                            <span v-else>{{ torrentFile[torrentFileColumn.field] }}</span>
+                        </div>
+                    </div>
+                </div>
                 </div>
                 <div v-if="selectedTorrent && selectedTorrentPage === 'Peers'" class="torrent-info-inner-container height-100-percent width-100-percent">
                     <div class="flex-row" @mousemove="columnMouseMove($event)" @mouseup="columnMouseUp($event)">
