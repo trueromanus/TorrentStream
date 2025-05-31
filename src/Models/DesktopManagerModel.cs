@@ -22,6 +22,8 @@
 
         public new IEnumerable<DesktopTorrentFileModel> Files { get; init; } = Enumerable.Empty<DesktopTorrentFileModel> ();
 
+        public IEnumerable<DesktopManagerPeerModel> TorrentPeers { get; init; } = Enumerable.Empty<DesktopManagerPeerModel> ();
+
     }
 
 }

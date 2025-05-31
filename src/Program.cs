@@ -95,7 +95,6 @@ app.MapGet ( "/playerws", ExternalPlayer.ExternalWebSocket );
 
 await TorrentHandler.LoadState ();
 
-DesktopUI.Initialize ();
 DesktopUI.Run ();
 
 app.Run ();

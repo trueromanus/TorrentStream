@@ -163,9 +163,14 @@ namespace TorrentStream {
             } else {
                 if ( torrentStream == null ) return null;
 
-                torrentStream.Position = 0;
-                var torrent = await Torrent.LoadAsync ( torrentStream );
-                manager = await m_ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
+                if ( torrentPath.StartsWith ( "magnet" ) ) {
+                    var magnetLink = MagnetLink.Parse ( torrentPath );
+                    manager = await m_ClientEngine.AddStreamingAsync ( magnetLink, DownloadsPath );
+                } else {
+                    torrentStream.Position = 0;
+                    var torrent = await Torrent.LoadAsync ( torrentStream );
+                    manager = await m_ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
+                }
                 await manager.StartAsync ();
                 await manager.WaitForMetadataAsync ();
                 m_TorrentManagers.TryAdd (
@@ -465,7 +470,7 @@ namespace TorrentStream {
             };
         }
 
-        public static string GetTorrentsAsJson () {
+        public static async Task<string> GetTorrentsAsJson () {
             if ( m_TorrentManagers.IsEmpty ) return "[]";
 
             var managers = m_TorrentManagers.Values;
@@ -478,6 +483,7 @@ namespace TorrentStream {
                 var files = manager.Manager.Files
                     .Select ( a => a.Length )
                     .ToArray ();
+                var peers = await manager.Manager.GetPeersAsync ();
                 result.Add (
                     new DesktopManagerModel {
                         Identifier = manager.Identifier,
@@ -505,7 +511,19 @@ namespace TorrentStream {
                                 }
                             )
                             .OrderBy ( a => a.DownloadedPath )
-                            .ToList ()
+                            .ToList (),
+                        TorrentPeers = peers
+                            .Select (
+                                a => new DesktopManagerPeerModel {
+                                    Percent = a.BitField.PercentComplete,
+                                    Address = a.Uri.Host,
+                                    Port = a.Uri.Port,
+                                    Client = a.ClientApp.Client.ToString (),
+                                    DownloadSpeed = ConvertToReadableSize ( a.Monitor.DownloadRate, bytesSeconds: true ),
+                                    UploadSpeed = ConvertToReadableSize ( a.Monitor.UploadRate, bytesSeconds: true ),
+                                }
+                            )
+                            .ToList()
                     }
                 );
             }

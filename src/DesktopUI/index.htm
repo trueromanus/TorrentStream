@@ -231,59 +231,45 @@
                 const torrentPeerColumns = ref([
                     {
                         title: "IP/Address",
-                        width: 140,
-                        minWidth: 140,
+                        width: 120,
+                        minWidth: 120,
                         align: "left",
-                        field: "torrentName",
+                        field: "address",
                     },
                     {
                         title: "Port",
                         width: 90,
                         minWidth: 90,
                         align: "left",
-                        field: "torrentName",
-                    },
-                    {
-                        title: "Connection",
-                        width: 120,
-                        minWidth: 120,
-                        align: "left",
-                        field: "torrentName",
-                    },
-                    {
-                        title: "Flags",
-                        width: 70,
-                        minWidth: 70,
-                        align: "left",
-                        field: "torrentName",
+                        field: "port",
                     },
                     {
                         title: "Client",
-                        width: 90,
-                        minWidth: 90,
+                        width: 110,
+                        minWidth: 110,
                         align: "left",
-                        field: "torrentName",
+                        field: "client",
                     },
                     {
                         title: "Progress",
                         width: 90,
                         minWidth: 90,
                         align: "left",
-                        field: "torrentName",
+                        field: "percent",
                     },
                     {
                         title: "Down Speed",
-                        width: 90,
-                        minWidth: 90,
+                        width: 100,
+                        minWidth: 100,
                         align: "left",
-                        field: "torrentName",
+                        field: "downloadSpeed",
                     },
                     {
                         title: "Up Speed",
-                        width: 90,
-                        minWidth: 90,
+                        width: 100,
+                        minWidth: 100,
                         align: "left",
-                        field: "torrentName",
+                        field: "uploadSpeed",
                     }
                 ])
                 const torrentFilesColumns = ref([
@@ -326,6 +312,7 @@
                 const selectedState = ref(states.value[0]);
                 const selectedTorrent = ref(null);
                 const selectedTorrentFile = ref(null);
+                const selectedTorrentPeer = ref(null);
                 const torrentPages = ref([
                     {
                         title: 'Files'
@@ -436,7 +423,8 @@
                     selectedTorrentPage,
                     torrentPeerColumns,
                     torrentFilesColumns,
-                    selectedTorrentFile
+                    selectedTorrentFile,
+                    selectedTorrentPeer
                 }
             }
         }).mount('#app');
@@ -566,7 +554,28 @@
                             <div class="flex-2-width"></div>
                             <div @mousedown="columnMouseDown($event, torrentColumn)" class="torrents-resizer height-100-percent"></div>
                         </div>
-                    </div>                    
+                    </div>
+                    <div class="flex-column">
+                    <div v-for="(torrentPeer,index) in selectedTorrent.torrentPeers"
+                        :key="index"
+                        :class="{ 'flex-row': true, 'selected-torrent': selectedTorrentPeer === torrentPeer}"
+                        @click="selectedTorrentPeer = torrentPeer">
+                        <div v-for="(torrentPeerColumn,subindex) in torrentPeerColumns"
+                             :key="subindex"
+                             :style="{'width': torrentPeerColumn.width + 'px','height': '20px'}"
+                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-justify-right': torrentPeerColumn.align === 'right'}">
+                            <div
+                                 v-if="torrentPeerColumn.customView === 'progress'"
+                                 :style="{'width': torrentPeerColumn.width - 2 + 'px'}"
+                                 class="torrents-column-value-progress height-100-percent stack">
+                                <div :style="{'width': getProgressPercent(torrentFile, torrentPeerColumn) + 'px'}" class="height-100-percent blue-background"></div>
+                                <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
+                                    <span>{{ torrentPeer[torrentPeerColumn.field] }}</span>
+                                </div>
+                            </div>
+                            <span v-else>{{ torrentPeer[torrentPeerColumn.field] }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
