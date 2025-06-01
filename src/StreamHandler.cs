@@ -484,6 +484,8 @@ namespace TorrentStream {
                     .Select ( a => a.Length )
                     .ToArray ();
                 var peers = await manager.Manager.GetPeersAsync ();
+                var count = peers.Count ();
+                if ( count > 0 ) Console.WriteLine ( manager.Manager.Name );
                 result.Add (
                     new DesktopManagerModel {
                         Identifier = manager.Identifier,
@@ -500,10 +502,11 @@ namespace TorrentStream {
                         Files = manager.Manager.Files
                             .Select (
                                 a => new DesktopTorrentFileModel {
+                                    Identifier = manager.Identifier + a.FullPath,
                                     IsDownloaded = a.BitField.PercentComplete >= 100,
                                     PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
                                     DownloadedPath = a.DownloadCompleteFullPath,
-                                    Name = a.FullPath,
+                                    Name = a.Path,
                                     Percent = a.BitField.PercentComplete,
                                     Priority = GetPriority ( a.Priority ),
                                     Size = ConvertToReadableSize ( a.Length ),
@@ -515,6 +518,7 @@ namespace TorrentStream {
                         TorrentPeers = peers
                             .Select (
                                 a => new DesktopManagerPeerModel {
+                                    Identifier = manager.Identifier + a.PeerID.Text,
                                     Percent = a.BitField.PercentComplete,
                                     Address = a.Uri.Host,
                                     Port = a.Uri.Port,

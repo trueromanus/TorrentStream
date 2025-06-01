@@ -524,8 +524,8 @@
                     <div class="flex-column">
                     <div v-for="(torrentFile,index) in selectedTorrent.files"
                          :key="index"
-                         :class="{ 'flex-row': true, 'selected-torrent':  selectedTorrentFile === torrentFile}"
-                         @click="selectedTorrentFile = torrentFile">
+                         :class="{ 'flex-row': true, 'selected-torrent':  selectedTorrentFile === torrentFile.identifier}"
+                         @click="selectedTorrentFile = torrentFile.identifier">
                         <div v-for="(torrentFileColumn,subindex) in torrentFilesColumns"
                              :key="subindex"
                              :style="{'width': torrentFileColumn.width + 'px','height': '20px'}"
@@ -558,8 +558,8 @@
                     <div class="flex-column">
                     <div v-for="(torrentPeer,index) in selectedTorrent.torrentPeers"
                         :key="index"
-                        :class="{ 'flex-row': true, 'selected-torrent': selectedTorrentPeer === torrentPeer}"
-                        @click="selectedTorrentPeer = torrentPeer">
+                        :class="{ 'flex-row': true, 'selected-torrent': selectedTorrentPeer === torrentPeer.identifier}"
+                        @click="selectedTorrentPeer = torrentPeer.identifier">
                         <div v-for="(torrentPeerColumn,subindex) in torrentPeerColumns"
                              :key="subindex"
                              :style="{'width': torrentPeerColumn.width + 'px','height': '20px'}"

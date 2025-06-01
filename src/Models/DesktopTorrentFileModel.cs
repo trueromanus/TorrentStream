@@ -2,6 +2,8 @@
 
     public record DesktopTorrentFileModel : TorrentFileModel {
 
+        public string Identifier { get; set; } = "";
+
         public double Percent { get; set; }
 
         public string Size { get; init; } = "";
