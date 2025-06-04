@@ -10,7 +10,6 @@ using TorrentStream.Models;
 using TorrentStream.SerializerContexts;
 using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
 
 namespace TorrentStream {
 
@@ -470,6 +469,53 @@ namespace TorrentStream {
             };
         }
 
+        private static ManagerModel? GetTorrentByIdentifier ( string identifier ) {
+            var managers = m_TorrentManagers.Values;
+            foreach ( var manager in managers ) {
+                var files = manager.Manager?.Files
+                    .Select ( a => a.Length )
+                    .ToArray () ?? Enumerable.Empty<long> ();
+                var filesSum = files.Any () ? files.Sum () : 0;
+                if ( identifier == DesktopUI.ComputeSha256Hash ( manager.Manager?.Name + ConvertToReadableSize ( filesSum ) ) ) return manager;
+            }
+
+            return null;
+        }
+
+        public static void StartTorrent ( string identifier ) {
+            var torrent = GetTorrentByIdentifier ( identifier );
+            if ( torrent == null ) return;
+
+            Task.Run ( torrent.Manager!.StartAsync );
+        }
+
+        public static void StopTorrent ( string identifier ) {
+            var torrent = GetTorrentByIdentifier ( identifier );
+            if ( torrent == null ) return;
+
+            Task.Run ( torrent.Manager!.StopAsync );
+        }
+
+        public static void DeleteTorrent ( string identifier ) {
+            var torrent = GetTorrentByIdentifier ( identifier );
+            if ( torrent == null ) return;
+
+            Task.Run (
+                async () => {
+                    await RemoveTorrent ( torrent );
+                    RemoveTorrentWithoutDownloadPath ( torrent );
+                }
+            );
+        }
+
+        private static string GetRemainingSize ( ITorrentManagerFile file ) {
+            var percents = file.BitField.PercentComplete;
+            if ( percents == 100 ) return ConvertToReadableSize ( 0 );
+            if ( percents == 0 ) percents = 0.01;
+            var number = Convert.ToInt64 ( ( percents / 100 ) * file.Length );
+            return ConvertToReadableSize ( file.Length - number );
+        }
+
         public static async Task<string> GetTorrentsAsJson () {
             if ( m_TorrentManagers.IsEmpty ) return "[]";
 
@@ -483,53 +529,55 @@ namespace TorrentStream {
                 var files = manager.Manager.Files
                     .Select ( a => a.Length )
                     .ToArray ();
+                var filesSum = files.Any () ? files.Sum () : 0;
                 var peers = await manager.Manager.GetPeersAsync ();
                 var count = peers.Count ();
-                if ( count > 0 ) Console.WriteLine ( manager.Manager.Name );
-                result.Add (
-                    new DesktopManagerModel {
-                        Identifier = manager.Identifier,
-                        DownloadPath = manager.DownloadPath,
-                        AllDownloaded = manager.Manager.Bitfield.PercentComplete >= 100,
-                        Percent = manager.Manager.Bitfield.PercentComplete,
-                        Size = ConvertToReadableSize ( files.Any () ? files.Sum () : 0 ),
-                        TorrentName = manager.Manager.Name,
-                        Peers = manager.Manager.Peers.Available,
-                        Seeds = manager.Manager.Peers.Seeds,
-                        DownloadSpeed = ConvertToReadableSize ( manager.Manager.Monitor.DownloadRate, bytesSeconds: true ),
-                        UploadSpeed = ConvertToReadableSize ( manager.Manager.Monitor.UploadRate, bytesSeconds: true ),
-                        Status = GetTorrentState ( manager.Manager.State ),
-                        Files = manager.Manager.Files
-                            .Select (
-                                a => new DesktopTorrentFileModel {
-                                    Identifier = manager.Identifier + a.FullPath,
-                                    IsDownloaded = a.BitField.PercentComplete >= 100,
-                                    PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
-                                    DownloadedPath = a.DownloadCompleteFullPath,
-                                    Name = a.Path,
-                                    Percent = a.BitField.PercentComplete,
-                                    Priority = GetPriority ( a.Priority ),
-                                    Size = ConvertToReadableSize ( a.Length ),
-                                    Remaining = ConvertToReadableSize ( Convert.ToInt64 ( ( a.Length * 100 ) / a.BitField.PercentComplete ) )
-                                }
-                            )
-                            .OrderBy ( a => a.DownloadedPath )
-                            .ToList (),
-                        TorrentPeers = peers
-                            .Select (
-                                a => new DesktopManagerPeerModel {
-                                    Identifier = manager.Identifier + a.PeerID.Text,
-                                    Percent = a.BitField.PercentComplete,
-                                    Address = a.Uri.Host,
-                                    Port = a.Uri.Port,
-                                    Client = a.ClientApp.Client.ToString (),
-                                    DownloadSpeed = ConvertToReadableSize ( a.Monitor.DownloadRate, bytesSeconds: true ),
-                                    UploadSpeed = ConvertToReadableSize ( a.Monitor.UploadRate, bytesSeconds: true ),
-                                }
-                            )
-                            .ToList()
-                    }
-                );
+                var torrent = new DesktopManagerModel {
+                    Identifier = manager.Identifier,
+                    DownloadPath = manager.DownloadPath,
+                    AllDownloaded = manager.Manager.Bitfield.PercentComplete >= 100,
+                    Percent = Convert.ToInt32 ( Math.Round ( manager.Manager.Bitfield.PercentComplete ) ),
+                    Size = ConvertToReadableSize ( filesSum ),
+                    TorrentName = manager.Manager.Name,
+                    Peers = manager.Manager.Peers.Available,
+                    Seeds = manager.Manager.Peers.Seeds,
+                    DownloadSpeed = ConvertToReadableSize ( manager.Manager.Monitor.DownloadRate, bytesSeconds: true ),
+                    UploadSpeed = ConvertToReadableSize ( manager.Manager.Monitor.UploadRate, bytesSeconds: true ),
+                    Status = GetTorrentState ( manager.Manager.State )
+                };
+                torrent = torrent with {
+                    Files = manager.Manager.Files
+                        .Select (
+                            a => new DesktopTorrentFileModel {
+                                Identifier = torrent.Unique + "_" + a.FullPath,
+                                IsDownloaded = a.BitField.PercentComplete >= 100,
+                                PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
+                                DownloadedPath = a.DownloadCompleteFullPath,
+                                Name = a.Path,
+                                Percent = Convert.ToInt32 ( Math.Round ( a.BitField.PercentComplete ) ),
+                                Priority = GetPriority ( a.Priority ),
+                                Size = ConvertToReadableSize ( a.Length ),
+                                Remaining = GetRemainingSize ( a )
+                            }
+                        )
+                        .OrderBy ( a => a.DownloadedPath )
+                        .ToList (),
+                    TorrentPeers = peers
+                        .Select (
+                            a => new DesktopManagerPeerModel {
+                                Identifier = torrent.Unique + "_" + a.PeerID.Text,
+                                Percent = Convert.ToInt32 ( Math.Round ( a.BitField.PercentComplete ) ),
+                                Address = a.Uri.Host,
+                                Port = a.Uri.Port,
+                                Client = a.ClientApp.Client.ToString (),
+                                DownloadSpeed = ConvertToReadableSize ( a.Monitor.DownloadRate, bytesSeconds: true ),
+                                UploadSpeed = ConvertToReadableSize ( a.Monitor.UploadRate, bytesSeconds: true ),
+                            }
+                        )
+                        .ToList ()
+                };
+
+                result.Add ( torrent );
             }
 
             return JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableDesktopManagerModel );
@@ -571,19 +619,42 @@ namespace TorrentStream {
             SendDeleteAfterSomeTimeout ();
         }
 
-        private static async Task RemoveTorrentFromTracker ( string downloadPath ) {
-            if ( m_TorrentManagers.TryGetValue ( downloadPath, out var torrentManager ) ) {
-                if ( torrentManager.Manager != null ) {
-                    await torrentManager.Manager.StopAsync ();
-                    await m_ClientEngine.RemoveAsync ( torrentManager.Manager );
-
-                    if ( !m_TorrentManagers.TryRemove ( downloadPath, out var _ ) ) {
-                        m_TorrentManagers.TryRemove ( downloadPath, out var _ );
-                    }
-                }
+        private static void RemoveTorrentWithoutDownloadPath ( ManagerModel torrent ) {
+            var downloadPath = "";
+            foreach ( var pairs in m_TorrentManagers ) {
+                if ( pairs.Value == torrent ) downloadPath = pairs.Key;
             }
 
+            if ( !string.IsNullOrEmpty ( downloadPath ) ) {
+                if ( !m_TorrentManagers.TryRemove ( downloadPath, out var _ ) ) {
+                    m_TorrentManagers.TryRemove ( downloadPath, out var _ );
+                }
+                m_DownloadedTorrents.Remove ( downloadPath );
+            }
+        }
+
+        private static void RemoveTorrentWithDownloadPath ( string downloadPath ) {
+            if ( string.IsNullOrEmpty ( downloadPath ) ) return;
+
+            if ( !m_TorrentManagers.TryRemove ( downloadPath, out var _ ) ) {
+                m_TorrentManagers.TryRemove ( downloadPath, out var _ );
+            }
             m_DownloadedTorrents.Remove ( downloadPath );
+        }
+
+        private static async Task RemoveTorrent ( ManagerModel torrent ) {
+            if ( torrent.Manager != null ) {
+                await torrent.Manager.StopAsync ();
+                await m_ClientEngine.RemoveAsync ( torrent.Manager );
+            }
+        }
+
+        private static async Task RemoveTorrentFromTracker ( string downloadPath ) {
+            if ( m_TorrentManagers.TryGetValue ( downloadPath, out var torrentManager ) ) {
+                await RemoveTorrent ( torrentManager );
+            }
+
+            RemoveTorrentWithDownloadPath ( downloadPath );
         }
 
         public static async Task ClearTorrentAndData ( HttpContext context ) {

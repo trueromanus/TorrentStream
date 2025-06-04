@@ -90,11 +90,14 @@
             background-color: #E0E0E0;
         }
         .torrent-text-button {
-            width: 50px;
+            width: 46px;
             height: 24px;
             padding-left: 3px;
             padding-top: 3px;
             margin-right: 2px;
+        }
+        .torrent-header-button-right > span {
+            padding-right: 4px;
         }
         .torrent-select {
             width: 100px;
@@ -187,8 +190,8 @@
                     },
                     {
                         title: "Progress",
-                        width: 95,
-                        minWidth: 95,
+                        width: 110,
+                        minWidth: 110,
                         align: "left",
                         field: "percent",
                         customView: "progress"
@@ -256,6 +259,7 @@
                         minWidth: 90,
                         align: "left",
                         field: "percent",
+                        customView: "progress"
                     },
                     {
                         title: "Down Speed",
@@ -293,6 +297,7 @@
                         minWidth: 140,
                         align: "left",
                         field: "percent",
+                        customView: "progress"
                     },
                     {
                         title: "Priority",
@@ -324,12 +329,15 @@
                 const selectedTorrentPage = ref('Files');
                 const movedColumn = ref(null);
                 const movedColumnX = ref(0);
+                const stopReadData = ref(true);
 
                 function selectState(item) {
                     selectedState.value = item;
                 }
 
                 async function refreshTorrent() {
+                    if (!stopReadData.value) return;
+
                     const response = await fetch("data.json");
                     if (!response.ok) return;
 
@@ -354,7 +362,6 @@
                                 }
                             }
                         } else {
-                            console.log('need delete ', torrent.unique);
                             needDelete.push(torrent);
                         }
                     }
@@ -373,11 +380,18 @@
                 function startRefreshTorrent() {
                     refreshTorrent();
 
+                    setTimeout(
+                        () => {
+                            refreshTorrent();
+                        },
+                        1000
+                    );
+
                     setInterval(
                         () => {
                             refreshTorrent();
                         },
-                        3000 // update each 3 seconds
+                        2500 // update each 2 seconds
                     );
                 }
 
@@ -400,10 +414,23 @@
 
                 function getProgressPercent(torrent, column) {
                     const width = column.width - 2;
-                    if (torrent.status <= 0) {
+                    if (torrent.percent <= 0) {
                         return '0px';
                     }
-                    return (torrent.status / 100) * width;
+                    return (torrent.percent / 100) * width;
+                }
+
+                function startDownload(indentifier) {
+                    fetch("command.dat/?start&" + indentifier);
+                }
+
+                function stopDownload(indentifier) {
+                    fetch("command.dat/?stop&" + indentifier);
+                }
+
+                function deleteDownload(indentifier) {
+                    fetch("command.dat/?delete&" + indentifier);
+                    selectedTorrent.value = null;
                 }
 
                 startRefreshTorrent();
@@ -424,7 +451,11 @@
                     torrentPeerColumns,
                     torrentFilesColumns,
                     selectedTorrentFile,
-                    selectedTorrentPeer
+                    selectedTorrentPeer,
+                    stopReadData,
+                    startDownload,
+                    stopDownload,
+                    deleteDownload
                 }
             }
         }).mount('#app');
@@ -448,6 +479,7 @@
                     {{ item.title }}
                 </span>
             </div>
+            <div @click="stopReadData = !stopReadData">Toggle read data</div>
         </div>
         <div class="torrents-container">
             <div class="torrents-list-container flex-column width-100-percent flex-2-height">
@@ -476,7 +508,7 @@
                                  class="torrents-column-value-progress height-100-percent stack">
                                 <div :style="{'width': getProgressPercent(torrent, torrentColumn) + 'px'}" class="height-100-percent blue-background"></div>
                                 <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
-                                    <span>{{ torrent[torrentColumn.field] }}</span>
+                                    <span>{{ torrent[torrentColumn.field] }}%</span>
                                 </div>
                             </div>
                             <span v-else>{{ torrent[torrentColumn.field] }}</span>
@@ -486,28 +518,37 @@
             </div>
             <div class="torrents-info-container width-100-percent flex-1-height flex-col">
                 <div v-if="selectedTorrent" class="torrent-tabs flex-row flex-row-items-center">
-                    <div class="torrent-icon-button flex-row flex-row-items-center">
+                    <div
+                        class="torrent-icon-button flex-row flex-row-items-center"
+                        title="Start download or seed torrent"
+                        @click="startDownload(selectedTorrent.unique)">
                         <img src="playbutton.svg" height="20" width="20" />
                     </div>
-                    <div class="torrent-icon-button flex-row flex-row-items-center">
+                    <div
+                        class="torrent-icon-button flex-row flex-row-items-center"
+                        title="Stop download or seed torrent"
+                        @click="stopDownload(selectedTorrent.unique)">
                         <img src="stopbutton.svg" height="20" width="20" />
                     </div>
-                    <div class="torrent-icon-button flex-row flex-row-items-center">
+                    <div
+                        class="torrent-icon-button flex-row flex-row-items-center"
+                        title="Delete torrent"
+                        @click="deleteDownload(selectedTorrent.unique)">
                         <img src="delete.svg" height="20" width="20" />
                     </div>
                     <div class="flex-1-width">
                     </div>
                     <div
-                        class="torrent-text-button flex-row flex-row-items-center left-button-corner"
+                        class="torrent-text-button torrent-header-button-right flex-row flex-row-items-center flex-row-justify-right left-button-corner"
                         :class="{'selected-corner': selectedTorrentPage === 'Files'}"
                         @click="selectedTorrentPage = 'Files'">
-                        Files
+                        <span>Files</span>
                     </div>
                     <div
                         class="torrent-text-button flex-row flex-row-items-center right-button-corner"
                         :class="{'selected-corner': selectedTorrentPage === 'Peers'}"
                         @click="selectedTorrentPage = 'Peers'">
-                        Peers
+                        <span>Peers</span>
                     </div>
                 </div>
                 <div v-if="selectedTorrent && selectedTorrentPage === 'Files'" class="torrent-info-inner-container height-100-percent width-100-percent">
@@ -536,7 +577,7 @@
                                  class="torrents-column-value-progress height-100-percent stack">
                                 <div :style="{'width': getProgressPercent(torrentFile, torrentFileColumn) + 'px'}" class="height-100-percent blue-background"></div>
                                 <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
-                                    <span>{{ torrentFile[torrentFileColumn.field] }}</span>
+                                    <span>{{ torrentFile[torrentFileColumn.field] }}%</span>
                                 </div>
                             </div>
                             <span v-else>{{ torrentFile[torrentFileColumn.field] }}</span>
@@ -568,7 +609,7 @@
                                  v-if="torrentPeerColumn.customView === 'progress'"
                                  :style="{'width': torrentPeerColumn.width - 2 + 'px'}"
                                  class="torrents-column-value-progress height-100-percent stack">
-                                <div :style="{'width': getProgressPercent(torrentFile, torrentPeerColumn) + 'px'}" class="height-100-percent blue-background"></div>
+                                <div :style="{'width': getProgressPercent(torrentPeer, torrentPeerColumn) + 'px'}" class="height-100-percent blue-background"></div>
                                 <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
                                     <span>{{ torrentPeer[torrentPeerColumn.field] }}</span>
                                 </div>

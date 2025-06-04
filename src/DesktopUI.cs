@@ -11,6 +11,14 @@ namespace TorrentStream {
     /// </summary>
     public static class DesktopUI {
 
+        private const string CommandPrefix = "command.dat/?";
+
+        private const string CommandStart = "start";
+
+        private const string CommandEnd = "stop";
+
+        private const string CommandDelete = "delete";
+
         private static string m_itemsCache = "[]";
 
         public static void SetCache ( string value ) => m_itemsCache = string.IsNullOrEmpty ( value ) ? "[]" : value;
@@ -48,6 +56,25 @@ namespace TorrentStream {
             if ( fileName.Contains ( "index.htm/" ) ) fileName = fileName.Replace ( "index.htm/", "" );
 
             if ( fileName == "data.json" ) return Encoding.UTF8.GetBytes ( m_itemsCache ); // data json is dynamic route
+            if ( fileName.StartsWith ( CommandPrefix ) ) {
+                var parameters = fileName.Replace ( CommandPrefix, "" ).Split ( "&" );
+                var command = parameters.First ();
+                var parameter1 = parameters.ElementAt ( 1 );
+
+                switch ( command ) {
+                    case CommandStart:
+                        TorrentHandler.StartTorrent ( parameter1 );
+                        break;
+                    case CommandEnd:
+                        TorrentHandler.StopTorrent ( parameter1 );
+                        break;
+                    case CommandDelete:
+                        TorrentHandler.DeleteTorrent ( parameter1 );
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             var assembly = Assembly.GetExecutingAssembly ();
             if ( assembly.GetManifestResourceNames ().Contains ( fileName ) ) {
