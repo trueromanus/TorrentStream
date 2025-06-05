@@ -504,6 +504,8 @@ namespace TorrentStream {
                 async () => {
                     await RemoveTorrent ( torrent );
                     RemoveTorrentWithoutDownloadPath ( torrent );
+                    await SaveState ();
+                    SendDeleteAfterSomeTimeout ();
                 }
             );
         }

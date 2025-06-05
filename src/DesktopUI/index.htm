@@ -10,21 +10,16 @@
             overflow: hidden;
         }
 
-        .torrents-container {
-            width: *;
-            height: *;
-            flow: vertical;
-        }
         .torrents-list-container {
             overflow: auto;
-            border-left: 1px solid lightgray;
+            border-left: 1px solid black;
         }
         .torrents-info-container {
-            border-left: 1px solid lightgray;
+            border-left: 1px solid black;
         }
         .torrents-info-container .torrent-tabs {
             height: 38px;
-            border-bottom: 1px solid lightgray;
+            border-bottom: 1px solid black;
         }
         .torrents-column {
             border-right: 1px solid lightgray;
@@ -138,11 +133,12 @@
     <script type="module">
         Window.this.caption = 'TorrentStream';
 
-        import { createApp, ref } from "./vue-esm.js";
+        import { createApp, ref, computed } from "./vue-esm.js";
 
         createApp({
             setup() {
                 const torrents = ref([]);
+                const displayTorrents = computed(() => filterTorrents());
                 const states = ref([
                     {
                         title: 'All',
@@ -335,6 +331,19 @@
                     selectedState.value = item;
                 }
 
+                function filterTorrents() {
+                    const item = selectedState.value.title;
+                    switch (item) {
+                        case 'All': return torrents.value
+                        case 'Downloading': return torrents.value.filter(a => a.percent < 100 || a.status === 'Download')
+                        case 'Seeding': return torrents.value.filter(a => a.status === 'Seeding')
+                        case 'Completed': return torrents.value.filter(a => a.percent === 100)
+                        case 'Runned': return torrents.value.filter(a => a.percent < 100 && (a.status === 'Started' || a.status === 'Download' || a.status === 'Metadata' || a.status === 'Seeding'))
+                        case 'Stopped': return torrents.value.filter(a => a.status === 'Stopped' || a.status === 'Stopping' || a.status === 'Pause')
+                        case 'Errored': return torrents.value.filter(a => a.status === 'Error')
+                    }
+                }
+
                 async function refreshTorrent() {
                     if (!stopReadData.value) return;
 
@@ -391,7 +400,7 @@
                         () => {
                             refreshTorrent();
                         },
-                        2500 // update each 2 seconds
+                        2000 // update each 2 seconds
                     );
                 }
 
@@ -455,7 +464,8 @@
                     stopReadData,
                     startDownload,
                     stopDownload,
-                    deleteDownload
+                    deleteDownload,
+                    displayTorrents
                 }
             }
         }).mount('#app');
@@ -481,7 +491,7 @@
             </div>
             <div @click="stopReadData = !stopReadData">Toggle read data</div>
         </div>
-        <div class="torrents-container">
+        <div class="flex-1 height-100-percent flex-col">
             <div class="torrents-list-container flex-column width-100-percent flex-2-height">
                 <div class="flex-row" @mousemove="columnMouseMove($event)" @mouseup="columnMouseUp($event)">
                     <div v-for="(torrentColumn,index) in torrentColumns"
@@ -494,7 +504,7 @@
                     </div>
                 </div>
                 <div class="flex-column">
-                    <div v-for="(torrent,index) in torrents"
+                    <div v-for="(torrent,index) in displayTorrents"
                          :key="index"
                          :class="{ 'flex-row': true, 'selected-torrent':  selectedTorrent === torrent}"
                          @click="selectedTorrent = torrent">
@@ -520,7 +530,7 @@
                 <div v-if="selectedTorrent" class="torrent-tabs flex-row flex-row-items-center">
                     <div
                         class="torrent-icon-button flex-row flex-row-items-center"
-                        title="Start download or seed torrent"
+                        tooltip="Start download or seed torrent"
                         @click="startDownload(selectedTorrent.unique)">
                         <img src="playbutton.svg" height="20" width="20" />
                     </div>
