@@ -13,7 +13,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
 
     - name: Restore dependencies
       run: dotnet restore src/TorrentStream.csproj
@@ -41,7 +41,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
 
     - name: Restore dependencies
       run: dotnet restore src/TorrentStream.csproj
@@ -69,11 +69,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
-    - name: update cache
-      run: sudo apt-get update -qq
-    - name: apt-update
-      run: sudo apt-get install -y --no-install-recommends qemu qemu-user-static binfmt-support debootstrap binutils-arm-linux-gnueabihf binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi libstdc++-12-dev clang-12
+        dotnet-version: 9.0.x
     - name: Publish x64 application
       run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
     - name: Publish arm x64 application      
