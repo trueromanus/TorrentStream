@@ -16,7 +16,7 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Download Sciter
-      run: curl -o sciterbin.zip https://github.com/trueromanus/TorrentStream/releases/download/1.0.1.12/sciterbin.zip
+      run: curl -o sciterbin.zip --location https://github.com/trueromanus/TorrentStream/releases/download/1.0.1.12/sciterbin.zip
     - name: Extract zip
       uses: ihiroky/extract-action@v1
       with:
