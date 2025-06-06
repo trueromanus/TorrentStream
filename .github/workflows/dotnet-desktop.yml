@@ -5,33 +5,6 @@ on:
     branches: [ "main" ]
 
 jobs:
-  macos64:
-    runs-on: macos-latest    
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
-
-    - name: Restore dependencies
-      run: dotnet restore src/TorrentStream.csproj
-    - name: Publish x64 application
-      run: dotnet publish -r osx-x64 -c Release --self-contained true src/TorrentStream.csproj
-    - name: Publish arm64 application
-      run: dotnet publish -r osx-arm64 -c Release --self-contained true src/TorrentStream.csproj
-    - name: Upload x64 artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: macos64
-        path: src/bin/Release/net8.0/osx-x64/publish/TorrentStream
-    - name: Upload arm64 artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: macosarm64
-        path: src/bin/Release/net8.0/osx-arm64/publish/TorrentStream
-        
   windows64:
     runs-on: windows-latest
 
@@ -43,6 +16,13 @@ jobs:
       with:
         dotnet-version: 9.0.x
 
+    - name: Download Sciter
+      run: wget https://github.com/trueromanus/TorrentStream/releases/download/1.0.1.12/sciterbin.zip
+    - name: Extract zip
+      uses: ihiroky/extract-action@v1
+      with:
+          file_path: sciterbin.zip
+          extract_dir: sciterbin
     - name: Restore dependencies
       run: dotnet restore src/TorrentStream.csproj
     - name: Publish x64 application
@@ -53,32 +33,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows64
-        path: src/bin/Release/net8.0/win-x64/publish/TorrentStream.exe
+        path: src/bin/Release/net9.0/win-x64/publish/TorrentStream.exe
     - name: Upload arm64 artifacts
       uses: actions/upload-artifact@v4
       with:
         name: windowsarm64
-        path: src/bin/Release/net8.0/win-arm64/publish/TorrentStream.exe
-        
-  linux64:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
-    - name: Publish x64 application
-      run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
-    - name: Publish arm x64 application      
-      run: dotnet publish -r linux-arm64 -c Release -p:PublishAot=false --self-contained true -p:PublishSingleFile=true src/TorrentStream.csproj
-    - uses: actions/upload-artifact@v4
-      with:
-        name: linux64
-        path: src/bin/Release/net8.0/linux-x64/publish/TorrentStream
-    - uses: actions/upload-artifact@v4
-      with:
-        name: linuxarm64
-        path: src/bin/Release/net8.0/linux-arm64/publish/TorrentStream
+        path: src/bin/Release/net9.0/win-arm64/publish/TorrentStream.exe       
