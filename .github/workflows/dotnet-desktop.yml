@@ -84,7 +84,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
-		
+
     - name: Download Sciter
       run: wget https://github.com/trueromanus/TorrentStream/releases/download/1.0.1.12/sciterbin.zip
     - name: Extract zip
