@@ -1,0 +1,635 @@
+<!doctype html>
+<html window-frame="normal">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link href="layout.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .torrents-list-container {
+            overflow: auto;
+            border-left: 1px solid black;
+        }
+        .torrents-info-container {
+            border-left: 1px solid black;
+        }
+        .torrents-info-container .torrent-tabs {
+            height: 38px;
+            border-bottom: 1px solid black;
+        }
+        .torrents-column {
+            border-right: 1px solid lightgray;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            width: *;
+        }
+        .torrents-column > span {
+            margin-left: 4px;
+            margin-right: 4px;
+        }
+        .torrents-column-value {
+            border-right: 1px solid transparent;
+            overflow-x: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .torrents-column-value > span {
+            padding-left: 4px;
+            margin-right: 4px;
+        }
+        .torrents-column-value-progress {
+            border-radius: 4px 4px;
+            background-color: #b3b3b3;
+            border: 1px solid lightgray;
+        }
+        .torrents-column-value-progress .blue-background {
+            border-radius: 4px 4px;
+            background-color: blue;
+            border: 1px solid white;
+            border-width: 0px;
+        }
+        .torrents-column-value-progress .percent-text {
+            filter: invert(1);
+            mix-blend-mode: difference;
+        }
+        .torrents-resizer {
+            cursor: pointer;
+            width: 5px;
+        }
+        .selected-torrent {
+            background-color: lightgray;
+        }
+        .torrent-icon-button {
+            width: 30px;
+            height: 30px;
+            border: 1px solid lightgray;
+            margin-right: 2px;
+        }
+        .torrent-icon-button > img {
+            margin-left: 4px;
+        }
+        .left-button-corner {
+            border: 1px solid #C5C5C5;
+            border-radius: 6px 0 0 6px;
+        }
+        .right-button-corner {
+            border: 1px solid #C5C5C5;
+            border-radius: 0 6px 6px 0;
+        }
+        .selected-corner {
+            background-color: #E0E0E0;
+        }
+        .torrent-text-button {
+            width: 46px;
+            height: 24px;
+            padding-left: 3px;
+            padding-top: 3px;
+            margin-right: 2px;
+        }
+        .torrent-header-button-right > span {
+            padding-right: 4px;
+        }
+        .torrent-select {
+            width: 100px;
+        }
+        .torrent-info-inner-container {
+            overflow: auto;
+        }
+
+        .state-container {
+            width: 200px;
+            overflow: auto;
+        }
+        .state-item {
+            height: 30px;
+        }
+        .state-item div {
+            margin-left: 4px;
+            margin-right: 6px;
+            height: 30px;
+        }
+        .state-item span {
+            padding-top: 4px;
+            margin-left: 2px;
+        }
+        .state-title {
+            height: 20px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+        .state-title span {
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .selected-state {
+            background-color: lightgray;
+        }
+    </style>
+    <script type="module">
+        Window.this.caption = 'TorrentStream';
+
+        import { createApp, ref, computed } from "./vue-esm.js";
+
+        createApp({
+            setup() {
+                const torrents = ref([]);
+                const displayTorrents = computed(() => filterTorrents());
+                const states = ref([
+                    {
+                        title: 'All',
+                        icon: 'all.svg'
+                    },
+                    {
+                        title: 'Downloading',
+                        icon: 'downloading.svg'
+                    },
+                    {
+                        title: 'Seeding',
+                        icon: 'seeding.svg'
+                    },
+                    {
+                        title: 'Completed',
+                        icon: 'completed.svg'
+                    },
+                    {
+                        title: 'Runned',
+                        icon: 'active.svg'
+                    },
+                    {
+                        title: 'Stopped',
+                        icon: 'stop.svg'
+                    },
+                    {
+                        title: 'Errored',
+                        icon: 'error.svg'
+                    }
+                ]);
+                const torrentColumns = ref([
+                    {
+                        title: "Name",
+                        width: 140,
+                        minWidth: 140,
+                        align: "left",
+                        field: "torrentName",
+                    },
+                    {
+                        title: "Size",
+                        width: 95,
+                        minWidth: 95,
+                        align: "right",
+                        field: "size",
+                    },
+                    {
+                        title: "Progress",
+                        width: 110,
+                        minWidth: 110,
+                        align: "left",
+                        field: "percent",
+                        customView: "progress"
+                    },
+                    {
+                        title: "Status",
+                        width: 85,
+                        minWidth: 85,
+                        field: "status"
+                    },
+                    {
+                        title: "Seeds",
+                        width: 65,
+                        minWidth: 65,
+                        align: "right",
+                        field: "seeds"
+                    },
+                    {
+                        title: "Peers",
+                        width: 65,
+                        minWidth: 65,
+                        align: "right",
+                        field: "peers"
+                    },
+                    {
+                        title: "Down speed",
+                        width: 100,
+                        minWidth: 100,
+                        align: "right",
+                        field: "downloadSpeed"
+                    },
+                    {
+                        title: "Up speed",
+                        width: 100,
+                        minWidth: 100,
+                        align: "right",
+                        field: "uploadSpeed"
+                    }
+                ]);
+                const torrentPeerColumns = ref([
+                    {
+                        title: "IP/Address",
+                        width: 120,
+                        minWidth: 120,
+                        align: "left",
+                        field: "address",
+                    },
+                    {
+                        title: "Port",
+                        width: 90,
+                        minWidth: 90,
+                        align: "left",
+                        field: "port",
+                    },
+                    {
+                        title: "Client",
+                        width: 110,
+                        minWidth: 110,
+                        align: "left",
+                        field: "client",
+                    },
+                    {
+                        title: "Progress",
+                        width: 90,
+                        minWidth: 90,
+                        align: "left",
+                        field: "percent",
+                        customView: "progress"
+                    },
+                    {
+                        title: "Down Speed",
+                        width: 100,
+                        minWidth: 100,
+                        align: "left",
+                        field: "downloadSpeed",
+                    },
+                    {
+                        title: "Up Speed",
+                        width: 100,
+                        minWidth: 100,
+                        align: "left",
+                        field: "uploadSpeed",
+                    }
+                ])
+                const torrentFilesColumns = ref([
+                    {
+                        title: "Name",
+                        width: 140,
+                        minWidth: 140,
+                        align: "left",
+                        field: "name",
+                    },
+                    {
+                        title: "Total Size",
+                        width: 120,
+                        minWidth: 120,
+                        align: "left",
+                        field: "size",
+                    },
+                    {
+                        title: "Progress",
+                        width: 140,
+                        minWidth: 140,
+                        align: "left",
+                        field: "percent",
+                        customView: "progress"
+                    },
+                    {
+                        title: "Priority",
+                        width: 140,
+                        minWidth: 140,
+                        align: "left",
+                        field: "priority",
+                    },
+                    {
+                        title: "Remaining",
+                        width: 140,
+                        minWidth: 140,
+                        align: "left",
+                        field: "remaining",
+                    }
+                ])
+                const selectedState = ref(states.value[0]);
+                const selectedTorrent = ref(null);
+                const selectedTorrentFile = ref(null);
+                const selectedTorrentPeer = ref(null);
+                const torrentPages = ref([
+                    {
+                        title: 'Files'
+                    },
+                    {
+                        title: 'Peers'
+                    }
+                ]);
+                const selectedTorrentPage = ref('Files');
+                const movedColumn = ref(null);
+                const movedColumnX = ref(0);
+                const stopReadData = ref(true);
+
+                function selectState(item) {
+                    selectedState.value = item;
+                }
+
+                function filterTorrents() {
+                    const item = selectedState.value.title;
+                    switch (item) {
+                        case 'All': return torrents.value
+                        case 'Downloading': return torrents.value.filter(a => a.percent < 100 || a.status === 'Download')
+                        case 'Seeding': return torrents.value.filter(a => a.status === 'Seeding')
+                        case 'Completed': return torrents.value.filter(a => a.percent === 100)
+                        case 'Runned': return torrents.value.filter(a => a.percent < 100 && (a.status === 'Started' || a.status === 'Download' || a.status === 'Metadata' || a.status === 'Seeding'))
+                        case 'Stopped': return torrents.value.filter(a => a.status === 'Stopped' || a.status === 'Stopping' || a.status === 'Pause')
+                        case 'Errored': return torrents.value.filter(a => a.status === 'Error')
+                    }
+                }
+
+                async function refreshTorrent() {
+                    if (!stopReadData.value) return;
+
+                    const response = await fetch("data.json");
+                    if (!response.ok) return;
+
+                    const result = await response.json();
+                    if (!torrents.value.length) {
+                        torrents.value = result;
+                        return;
+                    }
+
+                    const map = {};
+                    for (const item of result) map[item.unique] = item;
+
+                    const needDelete = [];
+
+                    for (const torrent of torrents.value) {
+                        const existItem = map[torrent.unique];
+                        if (existItem) {
+                            const keys = Object.keys(torrent);
+                            for (const key of keys) {
+                                if (torrent[key] !== existItem[key]) {
+                                    torrent[key] = existItem[key];
+                                }
+                            }
+                        } else {
+                            needDelete.push(torrent);
+                        }
+                    }
+
+                    const torrentsMap = {};
+                    for (const torrent of torrents.value) torrentsMap[torrent.unique] = torrent;
+
+                    for (const newitem of result) {
+                        if (!torrentsMap[newitem.unique]) {
+                            torrents.value.push(newitem);
+                        }
+                    }
+                    torrents.value = torrents.value.filter(a => !needDelete.find(b => b === a));
+                }
+
+                function startRefreshTorrent() {
+                    refreshTorrent();
+
+                    setTimeout(
+                        () => {
+                            refreshTorrent();
+                        },
+                        1000
+                    );
+
+                    setInterval(
+                        () => {
+                            refreshTorrent();
+                        },
+                        2000 // update each 2 seconds
+                    );
+                }
+
+                function columnMouseMove(event) {
+                    if (!movedColumn.value) return;
+                    const difference = event.clientX - movedColumnX.value;
+                    movedColumn.value.width = movedColumn.value.width + difference;
+                    movedColumnX.value = event.clientX;
+                }
+
+                function columnMouseDown(event, column) {
+                    movedColumn.value = column;
+                    movedColumnX.value = event.clientX;
+                }
+
+                function columnMouseUp(event) {
+                    movedColumn.value = null;
+                    movedColumnX.value = 0;
+                }
+
+                function getProgressPercent(torrent, column) {
+                    const width = column.width - 2;
+                    if (torrent.percent <= 0) {
+                        return '0px';
+                    }
+                    return (torrent.percent / 100) * width;
+                }
+
+                function startDownload(indentifier) {
+                    fetch("command.dat/?start&" + indentifier);
+                }
+
+                function stopDownload(indentifier) {
+                    fetch("command.dat/?stop&" + indentifier);
+                }
+
+                function deleteDownload(indentifier) {
+                    fetch("command.dat/?delete&" + indentifier);
+                    selectedTorrent.value = null;
+                }
+
+                startRefreshTorrent();
+
+                return {
+                    torrents,
+                    states,
+                    selectedState,
+                    selectedTorrent,
+                    selectState,
+                    torrentColumns,
+                    columnMouseMove,
+                    columnMouseDown,
+                    columnMouseUp,
+                    getProgressPercent,
+                    torrentPages,
+                    selectedTorrentPage,
+                    torrentPeerColumns,
+                    torrentFilesColumns,
+                    selectedTorrentFile,
+                    selectedTorrentPeer,
+                    stopReadData,
+                    startDownload,
+                    stopDownload,
+                    deleteDownload,
+                    displayTorrents
+                }
+            }
+        }).mount('#app');
+    </script>
+</head>
+<body>
+    <div id="app" class="full-screen-size flex-row">
+        <div class="state-container flex-col height-100-percent">
+            <div class="state-title width-100-percent">
+                <span>Status</span>
+            </div>
+            <div v-for="(item, index) in states"
+                 :key="index"
+                 class="state-item flex-row width-100-percent flex-row-items-center"
+                 :class="{ 'selected-state': selectedState === item }"
+                 @click="selectState(item)">
+                <div class="flex-row flex-row-items-center">
+                    <img :src="item.icon" height="50" width="20" />
+                </div>
+                <span>
+                    {{ item.title }}
+                </span>
+            </div>
+            <div @click="stopReadData = !stopReadData">Toggle read data</div>
+        </div>
+        <div class="flex-1 height-100-percent flex-col">
+            <div class="torrents-list-container flex-column width-100-percent flex-2-height">
+                <div class="flex-row" @mousemove="columnMouseMove($event)" @mouseup="columnMouseUp($event)">
+                    <div v-for="(torrentColumn,index) in torrentColumns"
+                         :key="index"
+                         :style="{'width': torrentColumn.width + 'px'}"
+                         :class="{'torrents-column': true, 'flex-row': true, 'flex-row-justify-right': torrentColumn.align === 'right'}">
+                        <span>{{ torrentColumn.title }}</span>
+                        <div class="flex-2-width"></div>
+                        <div @mousedown="columnMouseDown($event, torrentColumn)" class="torrents-resizer height-100-percent"></div>
+                    </div>
+                </div>
+                <div class="flex-column">
+                    <div v-for="(torrent,index) in displayTorrents"
+                         :key="index"
+                         :class="{ 'flex-row': true, 'selected-torrent':  selectedTorrent === torrent}"
+                         @click="selectedTorrent = torrent">
+                        <div v-for="(torrentColumn,subindex) in torrentColumns"
+                             :key="subindex"
+                             :style="{'width': torrentColumn.width + 'px','height': '20px'}"
+                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-justify-right': torrentColumn.align === 'right'}">
+                            <div
+                                 v-if="torrentColumn.customView === 'progress'"
+                                 :style="{'width': torrentColumn.width - 2 + 'px'}"
+                                 class="torrents-column-value-progress height-100-percent stack">
+                                <div :style="{'width': getProgressPercent(torrent, torrentColumn) + 'px'}" class="height-100-percent blue-background"></div>
+                                <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
+                                    <span>{{ torrent[torrentColumn.field] }}%</span>
+                                </div>
+                            </div>
+                            <span v-else>{{ torrent[torrentColumn.field] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="torrents-info-container width-100-percent flex-1-height flex-col">
+                <div v-if="selectedTorrent" class="torrent-tabs flex-row flex-row-items-center">
+                    <div
+                        class="torrent-icon-button flex-row flex-row-items-center"
+                        tooltip="Start download or seed torrent"
+                        @click="startDownload(selectedTorrent.unique)">
+                        <img src="playbutton.svg" height="20" width="20" />
+                    </div>
+                    <div
+                        class="torrent-icon-button flex-row flex-row-items-center"
+                        title="Stop download or seed torrent"
+                        @click="stopDownload(selectedTorrent.unique)">
+                        <img src="stopbutton.svg" height="20" width="20" />
+                    </div>
+                    <div
+                        class="torrent-icon-button flex-row flex-row-items-center"
+                        title="Delete torrent"
+                        @click="deleteDownload(selectedTorrent.unique)">
+                        <img src="delete.svg" height="20" width="20" />
+                    </div>
+                    <div class="flex-1-width">
+                    </div>
+                    <div
+                        class="torrent-text-button torrent-header-button-right flex-row flex-row-items-center flex-row-justify-right left-button-corner"
+                        :class="{'selected-corner': selectedTorrentPage === 'Files'}"
+                        @click="selectedTorrentPage = 'Files'">
+                        <span>Files</span>
+                    </div>
+                    <div
+                        class="torrent-text-button flex-row flex-row-items-center right-button-corner"
+                        :class="{'selected-corner': selectedTorrentPage === 'Peers'}"
+                        @click="selectedTorrentPage = 'Peers'">
+                        <span>Peers</span>
+                    </div>
+                </div>
+                <div v-if="selectedTorrent && selectedTorrentPage === 'Files'" class="torrent-info-inner-container height-100-percent width-100-percent">
+                    <div class="flex-row" @mousemove="columnMouseMove($event)" @mouseup="columnMouseUp($event)">
+                        <div v-for="(torrentColumn,index) in torrentFilesColumns"
+                            :key="index"
+                            :style="{'width': torrentColumn.width + 'px'}"
+                            :class="{'torrents-column': true, 'flex-row': true, 'flex-row-justify-right': torrentColumn.align === 'right'}">
+                            <span>{{ torrentColumn.title }}</span>
+                            <div class="flex-2-width"></div>
+                            <div @mousedown="columnMouseDown($event, torrentColumn)" class="torrents-resizer height-100-percent"></div>
+                        </div>
+                    </div>
+                    <div class="flex-column">
+                    <div v-for="(torrentFile,index) in selectedTorrent.files"
+                         :key="index"
+                         :class="{ 'flex-row': true, 'selected-torrent':  selectedTorrentFile === torrentFile.identifier}"
+                         @click="selectedTorrentFile = torrentFile.identifier">
+                        <div v-for="(torrentFileColumn,subindex) in torrentFilesColumns"
+                             :key="subindex"
+                             :style="{'width': torrentFileColumn.width + 'px','height': '20px'}"
+                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-justify-right': torrentFileColumn.align === 'right'}">
+                            <div
+                                 v-if="torrentFileColumn.customView === 'progress'"
+                                 :style="{'width': torrentFileColumn.width - 2 + 'px'}"
+                                 class="torrents-column-value-progress height-100-percent stack">
+                                <div :style="{'width': getProgressPercent(torrentFile, torrentFileColumn) + 'px'}" class="height-100-percent blue-background"></div>
+                                <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
+                                    <span>{{ torrentFile[torrentFileColumn.field] }}%</span>
+                                </div>
+                            </div>
+                            <span v-else>{{ torrentFile[torrentFileColumn.field] }}</span>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div v-if="selectedTorrent && selectedTorrentPage === 'Peers'" class="torrent-info-inner-container height-100-percent width-100-percent">
+                    <div class="flex-row" @mousemove="columnMouseMove($event)" @mouseup="columnMouseUp($event)">
+                        <div v-for="(torrentColumn,index) in torrentPeerColumns"
+                            :key="index"
+                            :style="{'width': torrentColumn.width + 'px'}"
+                            :class="{'torrents-column': true, 'flex-row': true, 'flex-row-justify-right': torrentColumn.align === 'right'}">
+                            <span>{{ torrentColumn.title }}</span>
+                            <div class="flex-2-width"></div>
+                            <div @mousedown="columnMouseDown($event, torrentColumn)" class="torrents-resizer height-100-percent"></div>
+                        </div>
+                    </div>
+                    <div class="flex-column">
+                    <div v-for="(torrentPeer,index) in selectedTorrent.torrentPeers"
+                        :key="index"
+                        :class="{ 'flex-row': true, 'selected-torrent': selectedTorrentPeer === torrentPeer.identifier}"
+                        @click="selectedTorrentPeer = torrentPeer.identifier">
+                        <div v-for="(torrentPeerColumn,subindex) in torrentPeerColumns"
+                             :key="subindex"
+                             :style="{'width': torrentPeerColumn.width + 'px','height': '20px'}"
+                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-justify-right': torrentPeerColumn.align === 'right'}">
+                            <div
+                                 v-if="torrentPeerColumn.customView === 'progress'"
+                                 :style="{'width': torrentPeerColumn.width - 2 + 'px'}"
+                                 class="torrents-column-value-progress height-100-percent stack">
+                                <div :style="{'width': getProgressPercent(torrentPeer, torrentPeerColumn) + 'px'}" class="height-100-percent blue-background"></div>
+                                <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
+                                    <span>{{ torrentPeer[torrentPeerColumn.field] }}</span>
+                                </div>
+                            </div>
+                            <span v-else>{{ torrentPeer[torrentPeerColumn.field] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

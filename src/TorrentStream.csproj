@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -15,8 +15,86 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
+	  <None Remove="DesktopUI\active.svg" />
+	  <None Remove="DesktopUI\add.svg" />
+	  <None Remove="DesktopUI\all.svg" />
+	  <None Remove="DesktopUI\completed.svg" />
+	  <None Remove="DesktopUI\delete.svg" />
+	  <None Remove="DesktopUI\downloading.svg" />
+	  <None Remove="DesktopUI\error.svg" />
+	  <None Remove="DesktopUI\index.htm" />
+	  <None Remove="DesktopUI\layout.css" />
+	  <None Remove="DesktopUI\playbutton.svg" />
+	  <None Remove="DesktopUI\seeding.svg" />
+	  <None Remove="DesktopUI\stop.svg" />
+	  <None Remove="DesktopUI\stopbutton.svg" />
+	  <None Remove="DesktopUI\vue-esm.js" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="../sciterbin/macos/libsciter.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+			<LogicalName>libsciter.dylib</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="../sciterbin/windows64/sciter.dll" Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">
+			<LogicalName>sciter.dll</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="../sciterbin/windowsarm64/sciter.dll" Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PROCESSOR_ARCHITECTURE)' != 'AMD64'">
+			<LogicalName>sciter.dll</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="../sciterbin/linux64/libsciter.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">
+			<LogicalName>libsciter.so</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="../sciterbin/linuxarm64/libsciter.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(PROCESSOR_ARCHITECTURE)' != 'AMD64'">
+			<LogicalName>libsciter.so</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\add.svg">
+			<LogicalName>add.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\delete.svg">
+			<LogicalName>delete.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\index.htm">
+			<LogicalName>index.htm</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\completed.svg">
+			<LogicalName>completed.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\active.svg">
+			<LogicalName>active.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\all.svg">
+			<LogicalName>all.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\downloading.svg">
+			<LogicalName>downloading.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\error.svg">
+			<LogicalName>error.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\layout.css">
+			<LogicalName>layout.css</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\playbutton.svg">
+			<LogicalName>playbutton.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\seeding.svg">
+			<LogicalName>seeding.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\stop.svg">
+			<LogicalName>stop.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\stopbutton.svg">
+			<LogicalName>stopbutton.svg</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="DesktopUI\vue-esm.js">
+			<LogicalName>vue-esm.js</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="EmptyFlow.SciterAPI" Version="1.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.4" />
 		<PackageReference Include="MonoTorrent" Version="3.0.2" />
 	</ItemGroup>
 
