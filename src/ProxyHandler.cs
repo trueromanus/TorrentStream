@@ -15,11 +15,8 @@ namespace TorrentStream {
 
             if ( string.IsNullOrEmpty ( model.Path ) ) return;
 
-            var httpClient = new HttpClient {
-                DefaultRequestVersion = HttpVersion.Version20,
-                DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
-            };
-            httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 AniLibriaQt/1.0.0" );
+            var httpClient = new HttpClient ();
+            httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36" );
             var response = await httpClient.GetAsync ( model.Path );
             var medialist = await response.Content.ReadAsStringAsync ();
 
