@@ -35,16 +35,16 @@
 		<EmbeddedResource Include="../sciterbin/macos/libsciter.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
 			<LogicalName>libsciter.dylib</LogicalName>
 		</EmbeddedResource>
-		<EmbeddedResource Include="../sciterbin/windows64/sciter.dll" Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">
+		<EmbeddedResource Include="../sciterbin/windows64/sciter.dll" Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(RuntimeIdentifier)' == 'win-x64'">
 			<LogicalName>sciter.dll</LogicalName>
 		</EmbeddedResource>
-		<EmbeddedResource Include="../sciterbin/windowsarm64/sciter.dll" Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PROCESSOR_ARCHITECTURE)' != 'AMD64'">
+		<EmbeddedResource Include="../sciterbin/windowsarm64/sciter.dll" Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(RuntimeIdentifier)' == 'win-arm64'">
 			<LogicalName>sciter.dll</LogicalName>
 		</EmbeddedResource>
-		<EmbeddedResource Include="../sciterbin/linux64/libsciter.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">
+		<EmbeddedResource Include="../sciterbin/linux64/libsciter.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(RuntimeIdentifier)' == 'linux-x64'">
 			<LogicalName>libsciter.so</LogicalName>
 		</EmbeddedResource>
-		<EmbeddedResource Include="../sciterbin/linuxarm64/libsciter.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(PROCESSOR_ARCHITECTURE)' != 'AMD64'">
+		<EmbeddedResource Include="../sciterbin/linuxarm64/libsciter.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(RuntimeIdentifier)' == 'linux-arm64'">
 			<LogicalName>libsciter.so</LogicalName>
 		</EmbeddedResource>
 		<EmbeddedResource Include="DesktopUI\add.svg">
@@ -92,7 +92,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="EmptyFlow.SciterAPI" Version="1.0.3" />
+		<PackageReference Include="EmptyFlow.SciterAPI" Version="1.0.6" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.4" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.4" />
 		<PackageReference Include="MonoTorrent" Version="3.0.2" />
