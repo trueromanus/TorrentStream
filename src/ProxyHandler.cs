@@ -11,9 +11,16 @@ namespace TorrentStream {
         }
 
         public static async Task ProxyVideolist ( ProxyVideoListModel model ) {
-            if ( model.Context == null) return;
+            if ( model.Context == null ) return;
 
             if ( string.IsNullOrEmpty ( model.Path ) ) return;
+
+            var pathIndex = model.Context.Request.QueryString.Value?.IndexOf ( "path=" ) ?? -1;
+            if ( pathIndex == -1 ) return;
+
+            var queryString = model.Context.Request.QueryString.Value ?? "";
+            var originalPath = queryString.Substring ( pathIndex + 5 );
+            if ( originalPath.Any () && originalPath != model.Path ) model.Path = originalPath;
 
             var httpClient = new HttpClient ();
             httpClient.DefaultRequestHeaders.Add ( "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36" );
