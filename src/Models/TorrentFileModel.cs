@@ -11,6 +11,8 @@
 
         public string DownloadedPath { get; init; } = "";
 
+        public long Size { get; internal set; }
+
     }
 
 }

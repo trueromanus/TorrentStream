@@ -419,7 +419,8 @@ namespace TorrentStream {
                                 a => new TorrentFileModel {
                                     IsDownloaded = a.BitField.PercentComplete >= 100,
                                     PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
-                                    DownloadedPath = a.DownloadCompleteFullPath
+                                    DownloadedPath = a.DownloadCompleteFullPath,
+                                    Size = a.Length,
                                 }
                             )
                             .OrderBy ( a => a.DownloadedPath )
