@@ -9,6 +9,10 @@
 
         public static string BaseFolder { get; set; } = "";
 
+        public static string? ListenAddress { get; set; } = "";
+
+        public static bool ShowUI { get; set; } = false;
+
     }
 
 }
