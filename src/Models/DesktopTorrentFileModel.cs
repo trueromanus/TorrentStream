@@ -6,7 +6,7 @@
 
         public double Percent { get; set; }
 
-        public string Size { get; init; } = "";
+        public new string Size { get; init; } = "";
 
         public string Name { get; set; } = "";
 
