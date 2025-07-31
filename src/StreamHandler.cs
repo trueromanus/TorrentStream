@@ -275,9 +275,7 @@ namespace TorrentStream {
             }
         }
 
-        public static async Task Finalization ( HttpContext context ) {
-            if ( context is null ) throw new ArgumentNullException ( nameof ( context ) );
-
+        public static async Task ClearAllTorrents () {
             await m_ClientEngine.StopAllAsync ();
             foreach ( var manager in m_TorrentManagers ) {
                 if ( manager.Value.Manager == null ) continue;
@@ -290,6 +288,12 @@ namespace TorrentStream {
             await SaveState ();
 
             if ( Directory.Exists ( DownloadsPath ) ) Directory.Delete ( DownloadsPath, true );
+        }
+
+        public static async Task Finalization ( HttpContext context ) {
+            if ( context is null ) throw new ArgumentNullException ( nameof ( context ) );
+
+            await ClearAllTorrents ();
 
             SendMessageToSocket ( "dt:" );
 
@@ -599,6 +603,17 @@ namespace TorrentStream {
             };
         }
 
+        public static async Task<bool> ClearOnlyTorrentByPath ( string downloadPath ) {
+            if ( !m_TorrentManagers.ContainsKey ( downloadPath ) ) return false;
+
+            await RemoveTorrentFromTracker ( downloadPath );
+
+            await SaveState ();
+
+            return true;
+        }
+
+
         public static async Task ClearOnlyTorrent ( HttpContext context ) {
             context.Response.ContentType = "text/plain";
             if ( context.Request.Query.Count != 1 ) {
@@ -658,6 +673,27 @@ namespace TorrentStream {
             }
 
             RemoveTorrentWithDownloadPath ( downloadPath );
+        }
+
+        public static async Task<bool> ClearTorrentAndDataByPath ( string downloadPath ) {
+            if ( m_TorrentManagers.TryGetValue ( downloadPath, out var torrent ) ) {
+                if ( torrent == null || torrent.Manager == null ) return false;
+
+                try {
+                    await RemoveTorrentFromTracker ( downloadPath );
+                } catch {
+                    //WORKAROUND: try to make once again after some timeout,
+                    //sometimes if we try to delete file we get error that file already used in another process
+                    //to overcome this error I make this workaround
+                    await Task.Delay ( 800 );
+                    await RemoveTorrentFromTracker ( downloadPath );
+                }
+                Directory.Delete ( torrent.Manager.ContainingDirectory, true );
+            }
+
+            await SaveState ();
+
+            return true;
         }
 
         public static async Task ClearTorrentAndData ( HttpContext context ) {

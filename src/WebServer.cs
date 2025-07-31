@@ -62,10 +62,6 @@ namespace TorrentStream {
             await TorrentHandler.LoadState ();
 
             if ( GlobalConfiguration.ShowUI ) DesktopUI.Run ();
-
-            app.Run ();
-
-            await TorrentHandler.SaveStateAndStop ();
         }
 
         public static void Run () {
