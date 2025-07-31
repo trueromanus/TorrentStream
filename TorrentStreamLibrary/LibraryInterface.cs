@@ -87,6 +87,10 @@ namespace TorrentStreamLibrary {
             );
         }
 
+        [UnmanagedCallersOnly ( EntryPoint = "torrentstreamsavestate" )]
+        public static void torrentstreamsavestate ( nint downloadPathPointer, nint callback ) => TorrentStreamSaveStateInternal ();
+        public static void TorrentStreamSaveStateInternal () => Task.Run ( TorrentHandler.SaveState );
+
     }
 
 }
