@@ -104,3 +104,15 @@ jobs:
       with:
         name: linuxarm64
         path: src/bin/Release/net9.0/linux-arm64/publish/TorrentStream
+        
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+      - linux64
+      - macos64
+      - windows64
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: alldistributions
