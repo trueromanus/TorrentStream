@@ -102,20 +102,39 @@ jobs:
           extract_dir: sciterbin		
     - name: Publish x64 application
       run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
-    - name: Publish arm x64 application      
-      run: dotnet publish -r linux-arm64 -c Release -p:PublishAot=false --self-contained true -p:PublishSingleFile=true src/TorrentStream.csproj
     - name: Rename binaries
-      run: |
-        cp src/bin/Release/net9.0/linux-x64/publish/TorrentStream linux64
-        cp src/bin/Release/net9.0/linux-arm64/publish/TorrentStream linuxarm64      
+      run: cp src/bin/Release/net9.0/linux-x64/publish/TorrentStream linux64
     - uses: actions/upload-artifact@v4
       with:
         name: dist-linux64
         path: linux64
+
+  linuxarm64:
+    runs-on: ubuntu-24.04-arm
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Download Sciter
+      run: wget https://github.com/trueromanus/TorrentStream/releases/download/1.0.1.12/sciterbin.zip
+    - name: Extract zip
+      uses: ihiroky/extract-action@v1
+      with:
+          file_path: sciterbin.zip
+          extract_dir: sciterbin		
+    - name: Publish arm x64 application
+      run: dotnet publish -r linux-arm64 -c Release --self-contained true src/TorrentStream.csproj
+    - name: Rename binaries
+      run: cp src/bin/Release/net9.0/linux-arm64/publish/TorrentStream linuxarm64
     - uses: actions/upload-artifact@v4
       with:
         name: dist-linuxarm64
-        path: linuxarm64
+        path: linuxarm64      
         
   merge:
     runs-on: ubuntu-latest
@@ -123,6 +142,7 @@ jobs:
       - linux64
       - macos64
       - windows64
+      - linuxarm64
     steps:
       - name: Merge Artifacts
         uses: actions/upload-artifact/merge@v4
