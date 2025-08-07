@@ -400,6 +400,38 @@ namespace TorrentStream {
             return Encoding.UTF8.GetBytes ( "ds:" + JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableStatusModel ) ).AsMemory ();
         }
 
+        public static string GetTorrentsJson () {
+            var managers = m_TorrentManagers.Values;
+
+            var result = new List<FullManagerModel> ();
+
+            foreach ( var manager in managers ) {
+                if ( manager.Manager == null ) continue;
+
+                result.Add (
+                    new FullManagerModel {
+                        Identifier = manager.Identifier,
+                        DownloadPath = manager.DownloadPath,
+                        AllDownloaded = manager.Manager.Bitfield.PercentComplete >= 100,
+                        Files = manager.Manager.Files
+                            .Select (
+                                a => new TorrentFileModel {
+                                    IsDownloaded = a.BitField.PercentComplete >= 100,
+                                    PercentComplete = Convert.ToInt32 ( a.BitField.PercentComplete ),
+                                    DownloadedPath = a.DownloadCompleteFullPath,
+                                    Size = a.Length,
+                                }
+                            )
+                            .OrderBy ( a => a.DownloadedPath )
+                            .ToList ()
+                    }
+                );
+            }
+
+            return JsonSerializer.Serialize ( result.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableFullManagerModel );
+        }
+
+
         public static async Task GetTorrents ( HttpContext context ) {
             if ( m_TorrentManagers.IsEmpty ) {
                 await context.Response.WriteAsync ( "[]" );
@@ -623,14 +655,12 @@ namespace TorrentStream {
 
             var downloadPath = GetStringValueFromQuery ( "path", context );
 
-            if ( !m_TorrentManagers.ContainsKey ( downloadPath ) ) {
+            var operation = await ClearOnlyTorrentByPath ( downloadPath );
+
+            if ( !operation ) {
                 await context.Response.WriteAsync ( "Already not exists" );
                 return;
             }
-
-            await RemoveTorrentFromTracker ( downloadPath );
-
-            await SaveState ();
 
             await context.Response.WriteAsync ( "Completed" );
 
@@ -705,25 +735,7 @@ namespace TorrentStream {
 
             var downloadPath = GetStringValueFromQuery ( "path", context );
 
-
-            if ( m_TorrentManagers.TryGetValue ( downloadPath, out var torrent ) ) {
-                if ( torrent == null || torrent.Manager == null ) {
-                    await context.Response.WriteAsync ( "Already not exists" );
-                    return;
-                }
-                try {
-                    await RemoveTorrentFromTracker ( downloadPath );
-                } catch {
-                    //WORKAROUND: try to make once again after some timeout,
-                    //sometimes if we try to delete file we get error that file already used in another process
-                    //to overcome this error I make this workaround
-                    await Task.Delay ( 800 );
-                    await RemoveTorrentFromTracker ( downloadPath );
-                }
-                Directory.Delete ( torrent.Manager.ContainingDirectory, true );
-            }
-
-            await SaveState ();
+            await ClearTorrentAndDataByPath ( downloadPath );
 
             await context.Response.WriteAsync ( "Completed" );
 

@@ -2,10 +2,10 @@
   "profiles": {
     "TorrentStream": {
       "commandName": "Project",
-      "workingDirectory": "C:\\work\\Repositories\\Anilibria.Qt\\torrentStream",
+      "workingDirectory": "C:/work/Repositories/TorrentStream/content",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "DOWNLOAD_PATH": "C:\\work\\Repositories\\Anilibria.Qt\\torrentStream"
+        "DOWNLOAD_PATH": "C:/work/Repositories/TorrentStream/content"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5082"

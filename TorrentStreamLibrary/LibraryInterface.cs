@@ -24,6 +24,8 @@ namespace TorrentStreamLibrary {
             if ( !string.IsNullOrEmpty ( listenAddress ) ) GlobalConfiguration.ListenAddress = listenAddress;
             GlobalConfiguration.ShowUI = showui;
 
+            Console.WriteLine ( $"TorrentStream library configuration: port {port}, path {downloadPath}" );
+
             var callback = Marshal.GetDelegateForFunctionPointer<CallbackConnected> ( callbackPointer );
 
             _ = Task.Run (
@@ -90,6 +92,10 @@ namespace TorrentStreamLibrary {
         [UnmanagedCallersOnly ( EntryPoint = "torrentstreamsavestate" )]
         public static void torrentstreamsavestate ( nint downloadPathPointer, nint callback ) => TorrentStreamSaveStateInternal ();
         public static void TorrentStreamSaveStateInternal () => Task.Run ( TorrentHandler.SaveState );
+
+        [UnmanagedCallersOnly ( EntryPoint = "torrentstreamgetall" )]
+        public static nint torrentstreamgetall () => TorrentStreamGetAllInternal ();
+        public static nint TorrentStreamGetAllInternal () => Marshal.StringToHGlobalUni ( TorrentHandler.GetTorrentsJson () );
 
     }
 
