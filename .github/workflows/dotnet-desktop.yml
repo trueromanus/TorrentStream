@@ -139,7 +139,7 @@ jobs:
     - name: Rename binaries
       run: |
         cp src/bin/Release/net9.0/linux-x64/publish/TorrentStream linux64
-        cp TorrentStreamLibrary/bin/Release/net9.0/linux-x64/publish/TorrentStream.so tsl64.so
+        cp TorrentStreamLibrary/bin/Release/net9.0/linux-x64/publish/TorrentStreamLibrary.so tsl64.so
     - uses: actions/upload-artifact@v4
       with:
         name: dist-linux64
@@ -174,7 +174,7 @@ jobs:
     - name: Rename binaries
       run: |
         cp src/bin/Release/net9.0/linux-arm64/publish/TorrentStream linuxarm64
-        cp TorrentStreamLibrary/bin/Release/net9.0/linux-arm64/publish/TorrentStream.so tslarm64.so
+        cp TorrentStreamLibrary/bin/Release/net9.0/linux-arm64/publish/TorrentStreamLibrary.so tslarm64.so
     - uses: actions/upload-artifact@v4
       with:
         name: dist-linuxarm64
