@@ -188,6 +188,28 @@ namespace TorrentStream {
             return manager;
         }
 
+        public enum FullDownloadResult { NoError, NotCorrectParameters, NotFound, Error };
+
+        public static async Task<FullDownloadResult> StartFullDownload ( string torrentPath, int identifier ) {
+            var (torrentStream, result) = await GetTorrentStream ( torrentPath );
+
+            if ( !result ) return FullDownloadResult.NotCorrectParameters;
+
+            try {
+                var manager = await GetManager ( torrentPath, torrentStream, identifier.ToString () );
+                if ( manager != null ) {
+                    foreach ( var file in manager.Files.Where ( a => a.Priority == Priority.DoNotDownload ) ) {
+                        await manager.SetFilePriorityAsync ( file, Priority.Normal );
+                    }
+                    manager.TorrentStateChanged += ManagerTorrentStateChanged;
+                }
+            } catch {
+                return FullDownloadResult.Error;
+            }
+
+            return FullDownloadResult.NoError;
+        }
+
         public static async Task StartFullDownload ( HttpContext context ) {
             context.Response.ContentType = "text/plain";
             if ( context.Request.Query.Count != 2 ) {
@@ -198,47 +220,19 @@ namespace TorrentStream {
             var torrentPath = GetStringValueFromQuery ( "path", context );
             var identifier = GetStringValueFromQuery ( "id", context );
 
-            var (torrentStream, result) = await GetTorrentStream ( torrentPath );
+            var result = await StartFullDownload ( torrentPath, Convert.ToInt32 ( identifier ) );
 
-            if ( !result ) {
-                context.Response.StatusCode = 400;
-                return;
-            }
+            context.Response.StatusCode = result switch {
+                FullDownloadResult.NotCorrectParameters => 400,
+                FullDownloadResult.NotFound => 404,
+                FullDownloadResult.Error => 500,
+                _ => 200,
+            };
 
-            try {
-                TorrentManager manager;
-
-                if ( m_TorrentManagers.TryGetValue ( torrentPath, out var createdManager ) ) {
-                    manager = createdManager.Manager ?? throw new Exception ( "Manager is null!" );
-                    foreach ( var file in manager.Files.Where ( a => a.Priority == Priority.DoNotDownload ) ) {
-                        await manager.SetFilePriorityAsync ( file, Priority.Normal );
-                    }
-                } else {
-                    if ( torrentStream == null ) {
-                        context.Response.StatusCode = 404;
-                        return;
-                    }
-                    torrentStream.Position = 0;
-                    var torrent = await Torrent.LoadAsync ( torrentStream );
-                    manager = await m_ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
-                    await manager.StartAsync ();
-                    manager.TorrentStateChanged += ManagerTorrentStateChanged;
-                    m_TorrentManagers.TryAdd (
-                        torrentPath,
-                        new ManagerModel {
-                            DownloadPath = torrentPath,
-                            Manager = manager,
-                            Identifier = Convert.ToInt32 ( identifier ),
-                            MetadataId = manager.MetadataPath
-                        }
-                    );
-                    SendMessageToSocket ( "nt:" + identifier );
-                    await SaveState ();
-                }
-                context.Response.StatusCode = 200;
+            if ( result == FullDownloadResult.NoError ) {
+                SendMessageToSocket ( "nt:" + identifier );
                 await context.Response.WriteAsync ( "Downloading started" );
-            } catch {
-                context.Response.StatusCode = 500;
+                return;
             }
         }
 

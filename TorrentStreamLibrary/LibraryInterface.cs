@@ -5,9 +5,11 @@ namespace TorrentStreamLibrary {
 
     public static class LibraryInterface {
 
-        public delegate void CallbackUpdateTorrents ();
+        public delegate void CallbackUpdateTorrents ( bool isResult );
 
         public delegate void CallbackConnected ();
+
+        public delegate void CallbackFullDownloadStarted ( int id, nint downloadPath, bool isAdded );
 
         [UnmanagedCallersOnly ( EntryPoint = "initializetorrentstream" )]
         public static int initializetorrentstream ( int port, IntPtr downloadPath, IntPtr listenAddress, bool showui, nint callbackPointer ) => InitializeTorrentStreamInternal ( port, downloadPath, listenAddress, showui, callbackPointer );
@@ -54,7 +56,7 @@ namespace TorrentStreamLibrary {
             Task.Run (
                 async () => {
                     await TorrentHandler.ClearAllTorrents ();
-                    callbackDelegate ();
+                    callbackDelegate ( true );
                 }
             );
         }
@@ -69,7 +71,7 @@ namespace TorrentStreamLibrary {
             Task.Run (
                 async () => {
                     var result = await TorrentHandler.ClearOnlyTorrentByPath ( downloadPath );
-                    if ( result ) callbackDelegate ();
+                    callbackDelegate ( result );
                 }
             );
         }
@@ -84,7 +86,7 @@ namespace TorrentStreamLibrary {
             Task.Run (
                 async () => {
                     var result = await TorrentHandler.ClearTorrentAndDataByPath ( downloadPath );
-                    if ( result ) callbackDelegate ();
+                    callbackDelegate ( result );
                 }
             );
         }
@@ -96,6 +98,23 @@ namespace TorrentStreamLibrary {
         [UnmanagedCallersOnly ( EntryPoint = "torrentstreamgetall" )]
         public static nint torrentstreamgetall () => TorrentStreamGetAllInternal ();
         public static nint TorrentStreamGetAllInternal () => Marshal.StringToHGlobalUni ( TorrentHandler.GetTorrentsJson () );
+
+        [UnmanagedCallersOnly ( EntryPoint = "torrentstreamstartdownload" )]
+        public static void torrentstreamstartdownload ( int id, nint path, nint callback ) => TorrentStreamStartDownloadInternal ( id, path, callback );
+        public static void TorrentStreamStartDownloadInternal ( int id, nint path, nint callback ) {
+            var callbackDelegate = Marshal.GetDelegateForFunctionPointer<CallbackFullDownloadStarted> ( callback );
+            var downloadPath = Marshal.PtrToStringUni ( path );
+            if ( string.IsNullOrEmpty ( downloadPath ) ) return;
+
+            Task.Run (
+                async () => {
+                    var result = await TorrentHandler.StartFullDownload ( downloadPath, id );
+
+                    var pathPointer = Marshal.StringToHGlobalUni ( downloadPath );
+                    callbackDelegate ( id, pathPointer, result == TorrentHandler.FullDownloadResult.NoError );
+                }
+            );
+        }
 
     }
 
