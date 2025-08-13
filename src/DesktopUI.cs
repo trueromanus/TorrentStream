@@ -38,7 +38,7 @@ namespace TorrentStream {
             }
 
             static void SaveLibraryToAppFolder ( string appPath, string libraryName ) {
-                using var stream = Assembly.GetExecutingAssembly ().GetManifestResourceStream ( libraryName );
+                using var stream = typeof ( DesktopUI ).Assembly.GetManifestResourceStream ( libraryName );
                 if ( stream == null ) throw new NotSupportedException ( "Not found sciter library in embedded resources!" );
 
                 var filePath = Path.Combine ( appPath, libraryName );
