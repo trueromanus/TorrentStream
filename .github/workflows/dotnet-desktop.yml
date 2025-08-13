@@ -28,10 +28,16 @@ jobs:
       run: dotnet publish -r osx-x64 -c Release --self-contained true src/TorrentStream.csproj
     - name: Publish arm64 application
       run: dotnet publish -r osx-arm64 -c Release --self-contained true src/TorrentStream.csproj
+    - name: Publish library x64 application
+      run: dotnet publish -r osx-x64 -c Release --self-contained true TorrentStreamLibrary/TorrentStreamLibrary.csproj
+    - name: Publish library arm64 application
+      run: dotnet publish -r osx-arm64 -c Release --self-contained true TorrentStreamLibrary/TorrentStreamLibrary.csproj
     - name: Rename binaries
       run: |
         cp src/bin/Release/net9.0/osx-x64/publish/TorrentStream macos64
         cp src/bin/Release/net9.0/osx-arm64/publish/TorrentStream macosarm64
+        cp TorrentStreamLibrary/bin/Release/net9.0/osx-x64/publish/TorrentStreamLibrary.dylib tsl64.dylib
+        cp TorrentStreamLibrary/bin/Release/net9.0/osx-arm64/publish/TorrentStreamLibrary.dylib tslarm64.dylib
     - name: Upload x64 artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -42,6 +48,16 @@ jobs:
       with:
         name: dist-macosarm64
         path: macosarm64
+    - name: Upload library x64 artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-macos-tsl64
+        path: tsl64.dylib
+    - name: Upload library arm64 artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-macos-tslarm64
+        path: tslarm64.dylib
         
   windows64:
     runs-on: windows-latest
@@ -67,10 +83,16 @@ jobs:
       run: dotnet publish -r win-x64 -c Release --self-contained true src/TorrentStream.csproj
     - name: Publish arm64 application
       run: dotnet publish -r win-arm64 -c Release --self-contained true src/TorrentStream.csproj
+    - name: Publish library x64 application
+      run: dotnet publish -r win-x64 -c Release --self-contained true TorrentStreamLibrary/TorrentStreamLibrary.csproj
+    - name: Publish library arm64 application
+      run: dotnet publish -r win-arm64 -c Release --self-contained true TorrentStreamLibrary/TorrentStreamLibrary.csproj
     - name: Rename binaries
       run: |
         Copy-Item -Path "src/bin/Release/net9.0/win-x64/publish/TorrentStream.exe" -Destination "windows64.exe"
         Copy-Item -Path "src/bin/Release/net9.0/win-arm64/publish/TorrentStream.exe" -Destination "windowsarm64.exe"
+        Copy-Item -Path "TorrentStreamLibrary/bin/Release/net9.0/win-arm64/publish/TorrentStreamLibrary.dll" -Destination "tslarm64.dll"
+        Copy-Item -Path "TorrentStreamLibrary/bin/Release/net9.0/win-x64/publish/TorrentStreamLibrary.dll" -Destination "tsl64.dll"
     - name: Upload x64 artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -81,6 +103,16 @@ jobs:
       with:
         name: dist-windowsarm64
         path: windowsarm64.exe
+    - name: Upload library x64 artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-windows-tsl64
+        path: tsl64.dll
+    - name: Upload library arm64 artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-windows-tslarm64
+        path: tslarm64.dll
         
   linux64:
     runs-on: ubuntu-latest
@@ -102,12 +134,20 @@ jobs:
           extract_dir: sciterbin		
     - name: Publish x64 application
       run: dotnet publish -r linux-x64 -c Release --self-contained true src/TorrentStream.csproj
+    - name: Publish library x64 application
+      run: dotnet publish -r linux-x64 -c Release --self-contained true TorrentStreamLibrary/TorrentStreamLibrary.csproj
     - name: Rename binaries
-      run: cp src/bin/Release/net9.0/linux-x64/publish/TorrentStream linux64
+      run: |
+        cp src/bin/Release/net9.0/linux-x64/publish/TorrentStream linux64
+        cp TorrentStreamLibrary/bin/Release/net9.0/linux-x64/publish/TorrentStreamLibrary.so tsl64.so
     - uses: actions/upload-artifact@v4
       with:
         name: dist-linux64
         path: linux64
+    - uses: actions/upload-artifact@v4
+      with:
+        name: dist-linux-tsl64
+        path: tsl64.so
 
   linuxarm64:
     runs-on: ubuntu-24.04-arm
@@ -129,12 +169,20 @@ jobs:
           extract_dir: sciterbin		
     - name: Publish arm x64 application
       run: dotnet publish -r linux-arm64 -c Release --self-contained true src/TorrentStream.csproj
+    - name: Publish library arm64 application
+      run: dotnet publish -r linux-arm64 -c Release --self-contained true TorrentStreamLibrary/TorrentStreamLibrary.csproj
     - name: Rename binaries
-      run: cp src/bin/Release/net9.0/linux-arm64/publish/TorrentStream linuxarm64
+      run: |
+        cp src/bin/Release/net9.0/linux-arm64/publish/TorrentStream linuxarm64
+        cp TorrentStreamLibrary/bin/Release/net9.0/linux-arm64/publish/TorrentStreamLibrary.so tslarm64.so
     - uses: actions/upload-artifact@v4
       with:
         name: dist-linuxarm64
-        path: linuxarm64      
+        path: linuxarm64
+    - uses: actions/upload-artifact@v4
+      with:
+        name: dist-linux-tslarm64
+        path: tslarm64.so
         
   merge:
     runs-on: ubuntu-latest
