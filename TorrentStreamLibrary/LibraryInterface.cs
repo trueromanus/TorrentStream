@@ -31,7 +31,7 @@ namespace TorrentStreamLibrary {
 
                 if ( buffer.Count () == 4 && buffer.SequenceEqual ( m_zeroBytes ) ) return "";
 
-                return Encoding.UTF8.GetString ( buffer.ToArray () ).Replace("\n", "");
+                return Encoding.UTF8.GetString ( buffer.ToArray () ).Replace ( "\u0000", "" );
             }
 
             return Marshal.PtrToStringUni ( pointer ) ?? "";
