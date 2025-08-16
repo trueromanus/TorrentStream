@@ -11,15 +11,21 @@ namespace TorrentStreamLibrary {
 
         public delegate void CallbackFullDownloadStarted ( int id, nint downloadPath, bool isAdded );
 
+        private static string GetStringFromPointer ( nint pointer ) {
+            if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Linux ) || RuntimeInformation.IsOSPlatform ( OSPlatform.OSX ) ) return Marshal.PtrToStringUTF8 ( pointer ) ?? "";
+
+            return Marshal.PtrToStringUni ( pointer ) ?? "";
+        }
+
         [UnmanagedCallersOnly ( EntryPoint = "initializetorrentstream" )]
         public static int initializetorrentstream ( int port, IntPtr downloadPath, IntPtr listenAddress, bool showui, nint callbackPointer ) => InitializeTorrentStreamInternal ( port, downloadPath, listenAddress, showui, callbackPointer );
         public static int InitializeTorrentStreamInternal ( int port, IntPtr downloadPathPointer, IntPtr listenAddressPointer, bool showui, nint callbackPointer ) {
             if ( port <= 0 || port > 65534 ) return 1;
 
-            var downloadPath = Marshal.PtrToStringUni ( downloadPathPointer );
+            var downloadPath = GetStringFromPointer ( downloadPathPointer );
             if ( string.IsNullOrEmpty ( downloadPath ) ) return 2;
 
-            var listenAddress = Marshal.PtrToStringUni ( listenAddressPointer );
+            var listenAddress = GetStringFromPointer ( listenAddressPointer );
 
             GlobalConfiguration.Port = port;
             GlobalConfiguration.BaseFolder = downloadPath;
@@ -65,7 +71,7 @@ namespace TorrentStreamLibrary {
         public static void torrentstreamclearonlytorrent ( nint downloadPathPointer, nint callback ) => TorrentStreamClearOnlyTorrentInternal ( downloadPathPointer, callback );
         public static void TorrentStreamClearOnlyTorrentInternal ( nint downloadPathPointer, nint callback ) {
             var callbackDelegate = Marshal.GetDelegateForFunctionPointer<CallbackUpdateTorrents> ( callback );
-            var downloadPath = Marshal.PtrToStringUni ( downloadPathPointer );
+            var downloadPath = GetStringFromPointer ( downloadPathPointer );
             if ( string.IsNullOrEmpty ( downloadPath ) ) return;
 
             Task.Run (
