@@ -9,6 +9,8 @@
 		<IsTrimmable>true</IsTrimmable>
 		<PublishTrimmed>true</PublishTrimmed>
 		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+		<AssemblyVersion>1.0.2.4</AssemblyVersion>
+		<FileVersion>1.0.2.4</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
