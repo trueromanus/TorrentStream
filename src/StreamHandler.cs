@@ -43,9 +43,9 @@ namespace TorrentStream {
 
     public static class TorrentHandler {
 
-        private static ClientEngine m_ClientEngine;
+        private static ClientEngine? m_ClientEngine;
 
-        static TorrentHandler () {
+        public static void Initialize() {
             var pathToCache = Path.Combine ( GlobalConfiguration.BaseFolder, "cache" );
             Console.WriteLine ( "TorrentHandler constructor " + pathToCache );
             var settingBuilder = new EngineSettingsBuilder {
@@ -166,11 +166,11 @@ namespace TorrentStream {
 
                 if ( torrentPath.StartsWith ( "magnet" ) ) {
                     var magnetLink = MagnetLink.Parse ( torrentPath );
-                    manager = await m_ClientEngine.AddStreamingAsync ( magnetLink, DownloadsPath );
+                    manager = await m_ClientEngine!.AddStreamingAsync ( magnetLink, DownloadsPath );
                 } else {
                     torrentStream.Position = 0;
                     var torrent = await Torrent.LoadAsync ( torrentStream );
-                    manager = await m_ClientEngine.AddStreamingAsync ( torrent, DownloadsPath );
+                    manager = await m_ClientEngine!.AddStreamingAsync ( torrent, DownloadsPath );
                 }
                 await manager.StartAsync ();
                 await manager.WaitForMetadataAsync ();
@@ -272,7 +272,7 @@ namespace TorrentStream {
         }
 
         public static async Task ClearAllTorrents () {
-            await m_ClientEngine.StopAllAsync ();
+            await m_ClientEngine!.StopAllAsync ();
             foreach ( var manager in m_TorrentManagers ) {
                 if ( manager.Value.Manager == null ) continue;
 
@@ -309,7 +309,7 @@ namespace TorrentStream {
         }
 
         public static async Task SaveState () {
-            await m_ClientEngine.SaveStateAsync ( StateFilePath );
+            await m_ClientEngine!.SaveStateAsync ( StateFilePath );
             await File.WriteAllTextAsync ( InnerStateFilePath, JsonSerializer.Serialize ( m_TorrentManagers.Values.AsEnumerable (), TorrentStreamSerializerContext.Default.IEnumerableManagerModel ) );
         }
 
@@ -689,7 +689,7 @@ namespace TorrentStream {
         private static async Task RemoveTorrent ( ManagerModel torrent ) {
             if ( torrent.Manager != null ) {
                 await torrent.Manager.StopAsync ();
-                await m_ClientEngine.RemoveAsync ( torrent.Manager );
+                await m_ClientEngine!.RemoveAsync ( torrent.Manager );
             }
         }
 

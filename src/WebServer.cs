@@ -46,6 +46,8 @@ namespace TorrentStream {
 
             app.UseRouting ();
 
+            TorrentHandler.Initialize ();
+
             app.MapGet ( "/online", TorrentHandler.StartDownloadForOnlineStreaming );
             app.MapGet ( "/fulldownload", TorrentHandler.StartFullDownload );
             app.MapGet ( "/torrents", TorrentHandler.GetTorrents );
