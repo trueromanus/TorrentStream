@@ -47,7 +47,6 @@ namespace TorrentStream {
 
         public static void Initialize() {
             var pathToCache = Path.Combine ( GlobalConfiguration.BaseFolder, "cache" );
-            Console.WriteLine ( "TorrentHandler constructor " + pathToCache );
             var settingBuilder = new EngineSettingsBuilder {
                 CacheDirectory = pathToCache
             };
