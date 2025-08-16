@@ -12,6 +12,8 @@ namespace TorrentStreamLibrary {
 
         public delegate void CallbackFullDownloadStarted ( int id, nint downloadPath, bool isAdded );
 
+        private static List<byte> m_zeroBytes = [0, 0, 0, 0];
+
         private static string GetStringFromPointer ( nint pointer ) {
             if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Linux ) || RuntimeInformation.IsOSPlatform ( OSPlatform.OSX ) ) {
                 if ( pointer == nint.Zero ) return "";
@@ -22,7 +24,7 @@ namespace TorrentStreamLibrary {
                 var offset = 0;
                 while ( true ) {
                     var readedByte = Marshal.ReadByte ( pointer, offset );
-                    if ( readedByte == 0 ) break;
+                    if ( buffer.Count () % 4 == 0 && buffer[^4..].SequenceEqual ( m_zeroBytes ) ) break;
 
                     offset++;
 
