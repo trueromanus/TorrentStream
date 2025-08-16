@@ -18,15 +18,11 @@ namespace TorrentStreamLibrary {
             if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Linux ) || RuntimeInformation.IsOSPlatform ( OSPlatform.OSX ) ) {
                 if ( pointer == nint.Zero ) return "";
 
-                Console.WriteLine ( "Start to read line" );
-
                 var buffer = new List<byte> ();
                 var offset = 0;
                 while ( true ) {
                     var readedByte = Marshal.ReadByte ( pointer, offset );
                     offset++;
-
-                    Console.WriteLine ( "readed byte: " + readedByte );
 
                     buffer.Add ( readedByte );
 
