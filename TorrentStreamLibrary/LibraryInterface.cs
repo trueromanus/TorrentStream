@@ -33,6 +33,8 @@ namespace TorrentStreamLibrary {
                     if ( buffer.Count () % 4 == 0 && buffer[^4..].SequenceEqual ( m_zeroBytes ) ) break;
                 }
 
+                if ( buffer.Count () == 4 && buffer.SequenceEqual ( m_zeroBytes ) ) return "";
+
                 return Encoding.UTF8.GetString ( buffer.ToArray () );
             }
 
