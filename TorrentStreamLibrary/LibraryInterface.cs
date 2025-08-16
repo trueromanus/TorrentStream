@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
 using TorrentStream;
 
 namespace TorrentStreamLibrary {
@@ -12,7 +13,26 @@ namespace TorrentStreamLibrary {
         public delegate void CallbackFullDownloadStarted ( int id, nint downloadPath, bool isAdded );
 
         private static string GetStringFromPointer ( nint pointer ) {
-            if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Linux ) || RuntimeInformation.IsOSPlatform ( OSPlatform.OSX ) ) return Marshal.PtrToStringUTF8 ( pointer ) ?? "";
+            if ( RuntimeInformation.IsOSPlatform ( OSPlatform.Linux ) || RuntimeInformation.IsOSPlatform ( OSPlatform.OSX ) ) {
+                if ( pointer == nint.Zero ) return "";
+
+                Console.WriteLine ( "Start to read line" );
+
+                var buffer = new List<byte> ();
+                var offset = 0;
+                while ( true ) {
+                    var readedByte = Marshal.ReadByte ( pointer, offset );
+                    if ( readedByte == 0 ) break;
+
+                    offset++;
+
+                    Console.WriteLine ( "readed byte: " + readedByte );
+
+                    buffer.Add ( readedByte );
+                }
+
+                return Encoding.UTF8.GetString ( buffer.ToArray () );
+            }
 
             return Marshal.PtrToStringUni ( pointer ) ?? "";
         }
