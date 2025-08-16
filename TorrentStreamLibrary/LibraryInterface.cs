@@ -24,13 +24,13 @@ namespace TorrentStreamLibrary {
                 var offset = 0;
                 while ( true ) {
                     var readedByte = Marshal.ReadByte ( pointer, offset );
-                    if ( buffer.Count () % 4 == 0 && buffer[^4..].SequenceEqual ( m_zeroBytes ) ) break;
-
                     offset++;
 
                     Console.WriteLine ( "readed byte: " + readedByte );
 
                     buffer.Add ( readedByte );
+
+                    if ( buffer.Count () % 4 == 0 && buffer[^4..].SequenceEqual ( m_zeroBytes ) ) break;
                 }
 
                 return Encoding.UTF8.GetString ( buffer.ToArray () );
