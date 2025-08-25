@@ -45,8 +45,9 @@ namespace TorrentStream {
 
         private static ClientEngine? m_ClientEngine;
 
-        public static void Initialize() {
+        public static void Initialize () {
             var pathToCache = Path.Combine ( GlobalConfiguration.BaseFolder, "cache" );
+            Console.WriteLine ( "Path to cache:" + pathToCache );
             var settingBuilder = new EngineSettingsBuilder {
                 CacheDirectory = pathToCache
             };
@@ -179,7 +180,7 @@ namespace TorrentStream {
                         DownloadPath = torrentPath,
                         Manager = manager,
                         Identifier = Convert.ToInt32 ( identifier ),
-                        MetadataId = manager.MetadataPath
+                        MetadataId = manager.InfoHashes.V1OrV2.ToHex()
                     }
                 );
                 SendMessageToSocket ( "nt:" + identifier );
@@ -326,7 +327,7 @@ namespace TorrentStream {
             var torrentManagers = JsonSerializer.Deserialize ( content, typeof ( List<ManagerModel> ), TorrentStreamSerializerContext.Default ) as List<ManagerModel>;
             if ( torrentManagers == null ) return;
             foreach ( var torrentManager in torrentManagers ) {
-                torrentManager.Manager = m_ClientEngine.Torrents.FirstOrDefault ( a => a.MetadataPath == torrentManager.MetadataId );
+                torrentManager.Manager = m_ClientEngine.Torrents.FirstOrDefault ( a => a.InfoHashes.V1OrV2.ToHex () == torrentManager.MetadataId );
                 if ( torrentManager.Manager == null ) continue;
                 if ( torrentManager.Manager != null ) torrentManager.Manager.TorrentStateChanged += ManagerTorrentStateChanged;
                 m_TorrentManagers.TryAdd ( torrentManager.DownloadPath, torrentManager );
