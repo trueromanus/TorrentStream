@@ -52,13 +52,17 @@ namespace TorrentStream {
                 CacheDirectory = pathToCache
             };
             m_ClientEngine = new ClientEngine ( settingBuilder.ToSettings () );
+
+            DownloadsPath = Path.Combine ( GlobalConfiguration.BaseFolder, "Downloads" );
+            StateFilePath = Path.Combine ( GlobalConfiguration.BaseFolder, "statefile" );
+            InnerStateFilePath = Path.Combine ( GlobalConfiguration.BaseFolder, "innerstatefile" );
         }
 
-        private static readonly string DownloadsPath = Path.Combine ( GlobalConfiguration.BaseFolder, "Downloads" );
+        private static string DownloadsPath = Path.Combine ( GlobalConfiguration.BaseFolder, "Downloads" );
 
-        private static readonly string StateFilePath = Path.Combine ( GlobalConfiguration.BaseFolder, "statefile" );
+        private static string StateFilePath = Path.Combine ( GlobalConfiguration.BaseFolder, "statefile" );
 
-        private static readonly string InnerStateFilePath = Path.Combine ( GlobalConfiguration.BaseFolder, "innerstatefile" );
+        private static string InnerStateFilePath = Path.Combine ( GlobalConfiguration.BaseFolder, "innerstatefile" );
 
         public static readonly HashSet<string> m_DownloadedTorrents = new ();
 
