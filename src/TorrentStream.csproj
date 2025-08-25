@@ -32,6 +32,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="../sciterbin/windows64/sciter.dll" Condition="$(Configuration) == 'Debug'">
+			<LogicalName>sciter.dll</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+	
+	<ItemGroup>
 		<EmbeddedResource Include="../sciterbin/macos/libsciter.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
 			<LogicalName>libsciter.dylib</LogicalName>
 		</EmbeddedResource>

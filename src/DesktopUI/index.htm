@@ -489,7 +489,6 @@
                     {{ item.title }}
                 </span>
             </div>
-            <div @click="stopReadData = !stopReadData">Toggle read data</div>
         </div>
         <div class="flex-1 height-100-percent flex-col">
             <div class="torrents-list-container flex-column width-100-percent flex-2-height">
@@ -607,24 +606,25 @@
                         </div>
                     </div>
                     <div class="flex-column">
-                    <div v-for="(torrentPeer,index) in selectedTorrent.torrentPeers"
-                        :key="index"
-                        :class="{ 'flex-row': true, 'selected-torrent': selectedTorrentPeer === torrentPeer.identifier}"
-                        @click="selectedTorrentPeer = torrentPeer.identifier">
-                        <div v-for="(torrentPeerColumn,subindex) in torrentPeerColumns"
-                             :key="subindex"
-                             :style="{'width': torrentPeerColumn.width + 'px','height': '20px'}"
-                             :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-justify-right': torrentPeerColumn.align === 'right'}">
-                            <div
-                                 v-if="torrentPeerColumn.customView === 'progress'"
-                                 :style="{'width': torrentPeerColumn.width - 2 + 'px'}"
-                                 class="torrents-column-value-progress height-100-percent stack">
-                                <div :style="{'width': getProgressPercent(torrentPeer, torrentPeerColumn) + 'px'}" class="height-100-percent blue-background"></div>
-                                <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
-                                    <span>{{ torrentPeer[torrentPeerColumn.field] }}</span>
+                        <div v-for="(torrentPeer,index) in selectedTorrent.torrentPeers"
+                            :key="index"
+                            :class="{ 'flex-row': true, 'selected-torrent': selectedTorrentPeer === torrentPeer.identifier}"
+                            @click="selectedTorrentPeer = torrentPeer.identifier">
+                            <div v-for="(torrentPeerColumn,subindex) in torrentPeerColumns"
+                                 :key="subindex"
+                                 :style="{'width': torrentPeerColumn.width + 'px','height': '20px'}"
+                                 :class="{'torrents-column-value': true, 'flex-row': true, 'flex-row-justify-right': torrentPeerColumn.align === 'right'}">
+                                <div
+                                     v-if="torrentPeerColumn.customView === 'progress'"
+                                     :style="{'width': torrentPeerColumn.width - 2 + 'px'}"
+                                     class="torrents-column-value-progress height-100-percent stack">
+                                    <div :style="{'width': getProgressPercent(torrentPeer, torrentPeerColumn) + 'px'}" class="height-100-percent blue-background"></div>
+                                    <div class="width-100-percent height-100-percent flex-row flex-row-items-center flex-row-justify-center percent-text">
+                                        <span>{{ torrentPeer[torrentPeerColumn.field] }}</span>
+                                    </div>
                                 </div>
+                                <span v-else>{{ torrentPeer[torrentPeerColumn.field] }}</span>
                             </div>
-                            <span v-else>{{ torrentPeer[torrentPeerColumn.field] }}</span>
                         </div>
                     </div>
                 </div>

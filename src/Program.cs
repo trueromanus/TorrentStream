@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 var listenAddress = Environment.GetEnvironmentVariable ( "LISTEN_ADDR" );
 var webPortValue = Environment.GetEnvironmentVariable ( "WEB_PORT" );
 var downloadDirectory = Environment.GetEnvironmentVariable ( "DOWNLOAD_PATH" );
+var interactive = Environment.GetEnvironmentVariable ( "INTERACTIVE" );
 var webPort = string.IsNullOrEmpty ( webPortValue ) ? 0 : Convert.ToInt32 ( webPortValue );
 if ( webPort < 0 ) webPort = 0;
 
@@ -14,6 +15,11 @@ GlobalConfiguration.Port = webPort > 0 ? webPort : 5082;
 GlobalConfiguration.BaseFolder = Path.GetDirectoryName ( AppContext.BaseDirectory ) ?? "";
 
 GlobalConfiguration.ListenAddress = listenAddress;
+
+GlobalConfiguration.ShowUI = interactive?.ToLowerInvariant () == "enabled";
+#if DEBUG
+GlobalConfiguration.ShowUI = true;
+#endif
 
 if ( !string.IsNullOrEmpty ( downloadDirectory ) ) {
     var directoryExists = Directory.Exists ( downloadDirectory );
