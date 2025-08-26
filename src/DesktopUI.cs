@@ -23,6 +23,8 @@ namespace TorrentStream {
 
         public static void SetCache ( string value ) => m_itemsCache = string.IsNullOrEmpty ( value ) ? "[]" : value;
 
+        private static Assembly GetCurrentAssembly() => typeof ( DesktopUI ).Assembly;
+
         private static string SaveSciter () {
             var appPath = Path.Combine ( Environment.GetFolderPath ( Environment.SpecialFolder.LocalApplicationData ), "TorrentStream" );
             if ( !Directory.Exists ( appPath ) ) Directory.CreateDirectory ( appPath );
@@ -38,7 +40,7 @@ namespace TorrentStream {
             }
 
             static void SaveLibraryToAppFolder ( string appPath, string libraryName ) {
-                using var stream = typeof ( DesktopUI ).Assembly.GetManifestResourceStream ( libraryName );
+                using var stream = GetCurrentAssembly ().GetManifestResourceStream ( libraryName );
                 if ( stream == null ) throw new NotSupportedException ( "Not found sciter library in embedded resources!" );
 
                 var filePath = Path.Combine ( appPath, libraryName );
@@ -76,7 +78,7 @@ namespace TorrentStream {
                 }
             }
 
-            var assembly = Assembly.GetExecutingAssembly ();
+            var assembly = GetCurrentAssembly();
             if ( assembly.GetManifestResourceNames ().Contains ( fileName ) ) {
                 using var stream = assembly.GetManifestResourceStream ( fileName );
                 if ( stream == null ) return [];
