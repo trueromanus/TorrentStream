@@ -23,7 +23,7 @@ namespace TorrentStream {
 
         public static void SetCache ( string value ) => m_itemsCache = string.IsNullOrEmpty ( value ) ? "[]" : value;
 
-        private static Assembly GetCurrentAssembly() => typeof ( DesktopUI ).Assembly;
+        public static Assembly GetCurrentAssembly() => typeof ( DesktopUI ).Assembly;
 
         private static string SaveSciter () {
             var appPath = Path.Combine ( Environment.GetFolderPath ( Environment.SpecialFolder.LocalApplicationData ), "TorrentStream" );

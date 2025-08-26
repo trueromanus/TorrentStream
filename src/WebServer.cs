@@ -10,6 +10,9 @@ namespace TorrentStream {
         private static WebApplication? m_application;
 
         public static async Task Initialize ( string[] args ) {
+            var version = DesktopUI.GetCurrentAssembly ().GetName ().Version;
+            if ( version != null ) Console.WriteLine ( $"TorrentStream version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}" );
+
             var options = new WebApplicationOptions {
                 Args = args,
                 ContentRootPath = WindowsServiceHelpers.IsWindowsService () ? AppContext.BaseDirectory : default
