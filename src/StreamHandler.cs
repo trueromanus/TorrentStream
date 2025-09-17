@@ -85,6 +85,8 @@ namespace TorrentStream {
                 }
             }
 
+            if ( url.StartsWith ( "magnet" ) ) return (null, true);
+
             try {
                 var httpClient = new HttpClient ();
                 var downloadedContent = await httpClient.GetStreamAsync ( url );
@@ -162,20 +164,23 @@ namespace TorrentStream {
         }
 
         private static async Task<TorrentManager?> GetManager ( string torrentPath, Stream? torrentStream, string identifier ) {
-            TorrentManager manager;
+            TorrentManager? manager = null;
             if ( m_TorrentManagers.TryGetValue ( torrentPath, out var createdManager ) ) {
                 manager = createdManager.Manager ?? throw new Exception ( "Manager is null!" );
             } else {
-                if ( torrentStream == null ) return null;
-
-                if ( torrentPath.StartsWith ( "magnet" ) ) {
+                var isMagnet = torrentPath.StartsWith ( "magnet" );
+                if ( isMagnet ) {
                     var magnetLink = MagnetLink.Parse ( torrentPath );
                     manager = await m_ClientEngine!.AddStreamingAsync ( magnetLink, DownloadsPath );
-                } else {
+                }
+                if ( torrentStream != null ) {
                     torrentStream.Position = 0;
                     var torrent = await Torrent.LoadAsync ( torrentStream );
                     manager = await m_ClientEngine!.AddStreamingAsync ( torrent, DownloadsPath );
                 }
+
+                if ( manager == null ) return null;
+
                 await manager.StartAsync ();
                 await manager.WaitForMetadataAsync ();
                 m_TorrentManagers.TryAdd (
@@ -184,7 +189,7 @@ namespace TorrentStream {
                         DownloadPath = torrentPath,
                         Manager = manager,
                         Identifier = Convert.ToInt32 ( identifier ),
-                        MetadataId = manager.InfoHashes.V1OrV2.ToHex()
+                        MetadataId = manager.InfoHashes.V1OrV2.ToHex ()
                     }
                 );
                 SendMessageToSocket ( "nt:" + identifier );
@@ -208,12 +213,14 @@ namespace TorrentStream {
                         await manager.SetFilePriorityAsync ( file, Priority.Normal );
                     }
                     manager.TorrentStateChanged += ManagerTorrentStateChanged;
+
+                    return FullDownloadResult.NoError;
                 }
             } catch {
                 return FullDownloadResult.Error;
             }
 
-            return FullDownloadResult.NoError;
+            return FullDownloadResult.Error;
         }
 
         public static async Task StartFullDownload ( HttpContext context ) {
@@ -225,6 +232,8 @@ namespace TorrentStream {
 
             var torrentPath = GetStringValueFromQuery ( "path", context );
             var identifier = GetStringValueFromQuery ( "id", context );
+
+            torrentPath = "magnet:?xt=urn:btih:0bb164fdba0e8ad806d25562fd94c9a09f81b5d1&dn=Kanojo+Okarishimasu+4rd+Season+-+AniLiberty+%5BWEB-DL+1080p+HEVC%5D&xl=3121992505&tr=http://tr.libria.fun:2710/announce&tr=http://retracker.local/announce";
 
             var result = await StartFullDownload ( torrentPath, Convert.ToInt32 ( identifier ) );
 

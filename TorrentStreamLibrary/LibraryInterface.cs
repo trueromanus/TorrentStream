@@ -4,7 +4,7 @@ using TorrentStream;
 
 namespace TorrentStreamLibrary {
 
-    public static class LibraryInterface {
+    public static partial class LibraryInterface {
 
         public delegate void CallbackUpdateTorrents ( bool isResult );
 
