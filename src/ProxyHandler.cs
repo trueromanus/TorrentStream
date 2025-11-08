@@ -28,7 +28,7 @@ namespace TorrentStream {
             var medialist = await response.Content.ReadAsStringAsync ();
 
             var uri = new Uri ( model.Path );
-            var partPrefix = $"{uri.Scheme}://{uri.Host}";
+            var partPrefix = $"{uri.Scheme}://";
             var result = new List<string> ();
             foreach ( var line in medialist.Split ( "\n" ) ) {
                 if ( line.StartsWith ( partPrefix ) ) {

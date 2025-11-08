@@ -60,10 +60,14 @@ namespace TorrentStreamLibrary {
                 async () => {
                     try {
                         await WebServer.Initialize ( [] );
+                    } catch ( Exception e ) {
+                        Console.WriteLine ( "Initialize error: " + e );
+                    }
+                    try {
                         callback ();
                         WebServer.Run ();
                     } catch ( Exception e ) {
-                        Console.WriteLine ( e );
+                        Console.WriteLine ( "Run error: " + e );
                     }
                 }
             );

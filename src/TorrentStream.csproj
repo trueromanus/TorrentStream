@@ -12,6 +12,7 @@
 		<AssemblyVersion>1.0.2.6</AssemblyVersion>
 		<FileVersion>1.0.2.6</FileVersion>
 		<PublishAot>true</PublishAot>
+		<AssemblyName>TorrentStream</AssemblyName>
 	</PropertyGroup>
 
 	<ItemGroup>
