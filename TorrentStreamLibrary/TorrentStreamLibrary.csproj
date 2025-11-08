@@ -9,9 +9,9 @@
 		<IsTrimmable>true</IsTrimmable>
 		<PublishTrimmed>true</PublishTrimmed>
 		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-		<AssemblyVersion>1.0.2.5</AssemblyVersion>
+		<AssemblyVersion>1.0.2.7</AssemblyVersion>
 		<AssemblyName>TorrentStreamLibrary</AssemblyName>
-		<FileVersion>1.0.2.5</FileVersion>
+		<FileVersion>1.0.2.7</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
