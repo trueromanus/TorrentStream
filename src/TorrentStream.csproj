@@ -9,7 +9,7 @@
 		<RepositoryUrl>https://github.com/trueromanus/TorrentStream</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>torrent;streaming</PackageTags>
-		<AssemblyVersion>1.0.2.6</AssemblyVersion>
+		<AssemblyVersion>1.0.2.7</AssemblyVersion>
 		<FileVersion>1.0.2.7</FileVersion>
 		<PublishAot>true</PublishAot>
 		<AssemblyName>TorrentStream</AssemblyName>
